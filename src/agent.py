@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 
 from vertexai.generative_models import GenerativeModel
 
@@ -20,14 +21,19 @@ Rules:
 - For multi-part questions, address each part separately.
 """
 
+_SAFETY_BLOCKED = "could not generate a response due to safety filters"
+
 _models: dict[str, GenerativeModel] = {}
+_model_lock = threading.Lock()
 
 
 def _get_model(model_name: str) -> GenerativeModel:
     if model_name not in _models:
-        _models[model_name] = GenerativeModel(
-            model_name, system_instruction=SYSTEM_PROMPT
-        )
+        with _model_lock:
+            if model_name not in _models:
+                _models[model_name] = GenerativeModel(
+                    model_name, system_instruction=SYSTEM_PROMPT
+                )
     return _models[model_name]
 
 
@@ -48,7 +54,8 @@ def _build_context(chunks: list[dict]) -> str:
 def _generate(model: GenerativeModel, prompt: str) -> str:
     response = model.generate_content(prompt)
     if not response.candidates:
-        return "The model could not generate a response due to safety filters."
+        logger.warning("Response blocked by safety filters")
+        return f"The model {_SAFETY_BLOCKED}."
     return response.text
 
 
@@ -75,18 +82,21 @@ def _answer_with_chunks(question: str, chunks: list[dict], model_name: str) -> d
     }
 
 
+_NO_DOCS_RESULT = {
+    "answer": "No relevant documents found. Please upload some documents first.",
+    "sources": [],
+    "model": None,
+    "chunks_used": 0,
+    "fallback": False,
+}
+
+
 def query(question: str, use_pro: bool = False) -> dict:
     """Answer a question using RAG with Gemini."""
     chunks = search_with_rerank(question)
 
     if not chunks:
-        return {
-            "answer": "No relevant documents found. Please upload some documents first.",
-            "sources": [],
-            "model": None,
-            "chunks_used": 0,
-            "fallback": False,
-        }
+        return dict(_NO_DOCS_RESULT)
 
     model_name = settings.gemini_pro_model if use_pro else settings.gemini_flash_model
     return _answer_with_chunks(question, chunks, model_name)
@@ -97,22 +107,17 @@ def query_with_fallback(question: str) -> dict:
     chunks = search_with_rerank(question)
 
     if not chunks:
-        return {
-            "answer": "No relevant documents found. Please upload some documents first.",
-            "sources": [],
-            "model": None,
-            "chunks_used": 0,
-            "fallback": False,
-        }
+        return dict(_NO_DOCS_RESULT)
 
     result = _answer_with_chunks(question, chunks, settings.gemini_flash_model)
 
-    answer = result.get("answer", "")
+    answer = result["answer"]
     uncertain_phrases = [
         "i don't have enough",
         "not enough information",
         "cannot determine",
         "unclear from the context",
+        _SAFETY_BLOCKED,
     ]
 
     if len(answer) < 50 or any(p in answer.lower() for p in uncertain_phrases):

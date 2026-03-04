@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 from typing import Protocol
 
@@ -92,13 +93,16 @@ class GCSStorage:
 
 
 _storage: StorageBackend | None = None
+_storage_lock = threading.Lock()
 
 
 def get_storage() -> StorageBackend:
     global _storage
     if _storage is None:
-        if settings.storage_mode == "gcs":
-            _storage = GCSStorage(settings.gcs_bucket)
-        else:
-            _storage = LocalStorage(settings.docs_directory)
+        with _storage_lock:
+            if _storage is None:
+                if settings.storage_mode == "gcs":
+                    _storage = GCSStorage(settings.gcs_bucket)
+                else:
+                    _storage = LocalStorage(settings.docs_directory)
     return _storage

@@ -1,22 +1,26 @@
+import logging
 from typing import Literal
 
 from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
 from pydantic_settings import BaseSettings
 from tenacity import (
+    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
     wait_exponential,
 )
 
+_retry_logger = logging.getLogger("src.retry")
 
-# Shared retry decorator for all GCP/Qdrant API calls
+# Shared retry decorator for all API calls (GCP + Qdrant)
 gcp_retry = retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=1, max=10),
     retry=retry_if_exception_type(
         (ResourceExhausted, ServiceUnavailable, ConnectionError)
     ),
+    before_sleep=before_sleep_log(_retry_logger, logging.WARNING),
 )
 
 

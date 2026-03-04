@@ -83,8 +83,12 @@ async def upload_document(file: UploadFile = File(...)):
 async def get_documents():
     from src.ingest import list_documents
 
-    docs = await asyncio.to_thread(list_documents)
-    return [DocumentInfo(**d) for d in docs]
+    try:
+        docs = await asyncio.to_thread(list_documents)
+        return [DocumentInfo(**d) for d in docs]
+    except Exception as e:
+        logger.error("Failed to list documents: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/documents/{doc_id}")
@@ -95,6 +99,7 @@ async def delete_document(doc_id: str):
         await asyncio.to_thread(delete_document, doc_id)
         return {"status": "deleted", "doc_id": doc_id}
     except Exception as e:
+        logger.error("Delete failed for doc %s: %s", doc_id, e)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -106,8 +111,12 @@ async def trigger_ingestion():
     if not docs_dir.exists():
         raise HTTPException(status_code=404, detail="Docs directory not found")
 
-    results = await asyncio.to_thread(ingest_directory, docs_dir)
-    return {"results": results}
+    try:
+        results = await asyncio.to_thread(ingest_directory, docs_dir)
+        return {"results": results}
+    except Exception as e:
+        logger.error("Ingestion failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/health")
@@ -117,12 +126,15 @@ async def health_check():
     try:
         client = get_qdrant()
         await asyncio.to_thread(client.get_collections)
-        qdrant_status = "connected"
-    except Exception:
-        qdrant_status = "disconnected"
+    except Exception as e:
+        logger.error("Health check: Qdrant unreachable: %s", e)
+        raise HTTPException(
+            status_code=503,
+            detail={"status": "unhealthy", "qdrant": "disconnected"},
+        )
 
     return {
         "status": "healthy",
-        "qdrant": qdrant_status,
+        "qdrant": "connected",
         "storage_mode": settings.storage_mode,
     }
