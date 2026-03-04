@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from src.config import get_genai_client, settings
 
@@ -109,3 +110,11 @@ async def request_id_middleware(request: Request, call_next) -> Response:
 from src.routes import router  # noqa: E402
 
 app.include_router(router)
+
+_DOCS_PATH = Path(__file__).parent.parent / "static" / "docs.html"
+
+
+@app.get("/", include_in_schema=False)
+async def documentation():
+    """Serve the documentation page."""
+    return FileResponse(_DOCS_PATH, media_type="text/html")
