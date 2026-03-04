@@ -118,7 +118,15 @@ curl http://localhost:8000/api/v1/health
 | `GET` | `/api/v1/stats` | Collection statistics (point count, vector count) |
 | `GET` | `/api/v1/health` | Health check with Qdrant status |
 
-Interactive docs at `http://localhost:8000/docs`.
+### Accessing Documentation
+
+Once the app is running, open your browser:
+
+| URL | Description |
+|-----|-------------|
+| `http://localhost:8000` | Full documentation page (setup guide, API reference, code examples) |
+| `http://localhost:8000/docs` | Interactive Swagger UI — try every endpoint live in the browser |
+| `http://localhost:8000/redoc` | Alternative API docs (ReDoc format) |
 
 ## Authentication
 

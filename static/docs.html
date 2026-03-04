@@ -429,6 +429,14 @@ footer a:hover { color: var(--ink); border-bottom-color: var(--ink); }
   </div>
 </div>
 
+<!-- Quick access bar -->
+<div style="max-width:900px;margin:0 auto 0;padding:1.5rem 2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;align-items:center;">
+  <span style="color:var(--text-secondary);font-family:var(--sans);font-size:0.95rem;">Quick access:</span>
+  <a href="/" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.2rem;background:var(--accent);color:var(--bg);font-family:var(--sans);font-weight:600;font-size:0.9rem;border-radius:6px;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">This Page &mdash; /</a>
+  <a href="/docs" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.2rem;background:var(--ink);color:var(--paper);font-family:var(--sans);font-weight:600;font-size:0.9rem;border-radius:6px;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">Swagger UI &mdash; /docs</a>
+  <a href="/redoc" style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1.2rem;border:1.5px solid var(--ink);color:var(--ink);font-family:var(--sans);font-weight:600;font-size:0.9rem;border-radius:6px;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">ReDoc &mdash; /redoc</a>
+</div>
+
 <div class="content">
 
 <!-- ============================== SETUP ============================== -->
@@ -547,6 +555,25 @@ docker compose up -d</code></pre>
       </div>
     </div>
     <div class="step" data-num="04">
+      <h3>Access the Docs</h3>
+      <p style="margin-bottom:1rem;color:var(--text-secondary);">Once the app is running, open your browser to view this documentation and the interactive API playground:</p>
+      <div class="code-block">
+        <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-bash"># This documentation page
+open http://localhost:8000
+
+# Interactive Swagger UI (try endpoints live)
+open http://localhost:8000/docs
+
+# Alternative API docs (ReDoc)
+open http://localhost:8000/redoc</code></pre>
+      </div>
+      <div style="margin-top:1rem;padding:1rem 1.2rem;background:rgba(200,170,110,0.08);border-left:3px solid var(--accent);border-radius:4px;">
+        <strong style="color:var(--accent);">Tip:</strong>
+        <span style="color:var(--text-secondary);">The Swagger UI at <code>/docs</code> lets you try every endpoint directly in the browser — upload files, run queries, and inspect responses without writing any code.</span>
+      </div>
+    </div>
+    <div class="step" data-num="05">
       <h3>Verify</h3>
       <div class="code-block">
         <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
