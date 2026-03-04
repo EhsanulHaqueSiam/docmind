@@ -74,7 +74,15 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 docker compose up -d
 ```
 
-### 4. Use
+### 4. Open the docs
+
+Once the app is running, open your browser:
+
+- **http://localhost:8000** — Full documentation (setup guide, API reference, code examples)
+- **http://localhost:8000/docs** — Interactive Swagger UI (try endpoints live)
+- **http://localhost:8000/redoc** — ReDoc API reference
+
+### 5. Use
 
 Drop files into the `docs/` directory — they'll be auto-ingested.
 
@@ -118,15 +126,6 @@ curl http://localhost:8000/api/v1/health
 | `GET` | `/api/v1/stats` | Collection statistics (point count, vector count) |
 | `GET` | `/api/v1/health` | Health check with Qdrant status |
 
-### Accessing Documentation
-
-Once the app is running, open your browser:
-
-| URL | Description |
-|-----|-------------|
-| `http://localhost:8000` | Full documentation page (setup guide, API reference, code examples) |
-| `http://localhost:8000/docs` | Interactive Swagger UI — try every endpoint live in the browser |
-| `http://localhost:8000/redoc` | Alternative API docs (ReDoc format) |
 
 ## Authentication
 
