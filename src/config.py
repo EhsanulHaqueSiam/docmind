@@ -1,0 +1,49 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+
+    # GCP
+    gcp_project_id: str = ""
+    gcp_location: str = "us-central1"
+
+    # Gemini models
+    gemini_flash_model: str = "gemini-2.5-flash"
+    gemini_pro_model: str = "gemini-2.5-pro"
+
+    # Embedding
+    embedding_model: str = "text-embedding-005"
+    embedding_dimension: int = 768
+
+    # Qdrant
+    qdrant_url: str = "http://localhost:6333"
+    qdrant_api_key: str = ""
+    qdrant_collection: str = "rag_documents"
+
+    # Storage
+    storage_mode: str = "local"  # "local" or "gcs"
+    docs_directory: str = "docs"
+    gcs_bucket: str = ""
+
+    # App
+    host: str = "0.0.0.0"
+    port: int = 8000
+    log_level: str = "info"
+
+    # Retrieval
+    top_k: int = 10
+    rerank_top_k: int = 5
+    rerank_context_chars: int = 500
+
+    # Upload
+    max_upload_size_mb: int = 100
+
+    # Ingestion
+    embedding_batch_size: int = 250
+
+    # Watcher
+    watcher_debounce_seconds: float = 2.0
+
+
+settings = Settings()
