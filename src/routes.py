@@ -49,7 +49,6 @@ async def query_documents(req: QueryRequest):
     try:
         if req.use_pro:
             result = await asyncio.to_thread(query, req.question, True)
-            result["fallback"] = False
         else:
             result = await asyncio.to_thread(query_with_fallback, req.question)
 

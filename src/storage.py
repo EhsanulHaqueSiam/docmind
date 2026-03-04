@@ -52,9 +52,7 @@ class LocalStorage:
         return dest
 
     def delete_file(self, path: str | Path) -> None:
-        p = Path(path)
-        if p.exists():
-            p.unlink()
+        Path(path).unlink(missing_ok=True)
 
 
 class GCSStorage:
@@ -90,12 +88,17 @@ class GCSStorage:
     def delete_file(self, path: str | Path) -> None:
         blob = self.bucket.blob(str(path))
         blob.delete()
-        cached = self._local_cache / str(path)
-        if cached.exists():
-            cached.unlink()
+        (self._local_cache / str(path)).unlink(missing_ok=True)
+
+
+_storage: StorageBackend | None = None
 
 
 def get_storage() -> StorageBackend:
-    if settings.storage_mode == "gcs":
-        return GCSStorage(settings.gcs_bucket)
-    return LocalStorage(settings.docs_directory)
+    global _storage
+    if _storage is None:
+        if settings.storage_mode == "gcs":
+            _storage = GCSStorage(settings.gcs_bucket)
+        else:
+            _storage = LocalStorage(settings.docs_directory)
+    return _storage

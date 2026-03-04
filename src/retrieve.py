@@ -2,80 +2,62 @@ from __future__ import annotations
 
 import logging
 
-from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from vertexai.generative_models import GenerativeModel
 
-from src.config import settings
+from src.config import gcp_retry, settings
 from src.ingest import embed_texts, get_qdrant
 
 logger = logging.getLogger(__name__)
 
+_rerank_model: GenerativeModel | None = None
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(
-        (ResourceExhausted, ServiceUnavailable, ConnectionError)
-    ),
-)
-def search(query: str, top_k: int | None = None) -> list[dict]:
+
+def _get_rerank_model() -> GenerativeModel:
+    global _rerank_model
+    if _rerank_model is None:
+        _rerank_model = GenerativeModel(settings.gemini_flash_model)
+    return _rerank_model
+
+
+@gcp_retry
+def search(query: str) -> list[dict]:
     """Search documents using dense vector similarity."""
-    top_k = top_k or settings.top_k
-
-    # Embed the query
     query_embedding = embed_texts([query])[0]
 
     client = get_qdrant()
     results = client.query_points(
         collection_name=settings.qdrant_collection,
         query=query_embedding,
-        limit=top_k,
+        limit=settings.top_k,
         with_payload=True,
     )
 
-    chunks = []
-    for point in results.points:
-        chunks.append(
-            {
-                "text": point.payload.get("text", ""),
-                "filename": point.payload.get("filename", ""),
-                "doc_id": point.payload.get("doc_id", ""),
-                "chunk_index": point.payload.get("chunk_index", 0),
-                "headings": point.payload.get("headings", []),
-                "score": point.score,
-            }
-        )
-
-    return chunks
+    return [
+        {
+            "text": point.payload.get("text", ""),
+            "filename": point.payload.get("filename", ""),
+            "doc_id": point.payload.get("doc_id", ""),
+            "chunk_index": point.payload.get("chunk_index", 0),
+            "headings": point.payload.get("headings", []),
+            "score": point.score,
+        }
+        for point in results.points
+    ]
 
 
-def search_with_rerank(
-    query: str,
-    top_k: int | None = None,
-    rerank_top_k: int | None = None,
-) -> list[dict]:
+def search_with_rerank(query: str) -> list[dict]:
     """Search and rerank results using Gemini for relevance scoring."""
-    top_k = top_k or settings.top_k
-    rerank_top_k = rerank_top_k or settings.rerank_top_k
-
-    # Get initial results
-    candidates = search(query, top_k=top_k)
+    candidates = search(query)
 
     if not candidates:
         return []
 
+    rerank_top_k = settings.rerank_top_k
+
     # Rerank using Gemini
     try:
-        from vertexai.generative_models import GenerativeModel
-
-        model = GenerativeModel(settings.gemini_flash_model)
+        model = _get_rerank_model()
         context_chars = settings.rerank_context_chars
-        # Build reranking prompt
         numbered = "\n".join(
             f"[{i}] {c['text'][:context_chars]}" for i, c in enumerate(candidates)
         )
@@ -88,7 +70,6 @@ def search_with_rerank(
 
         response = model.generate_content(prompt)
 
-        # Handle blocked responses
         if not response.candidates:
             logger.warning("Reranking response blocked by safety filters")
             return candidates[:rerank_top_k]
@@ -108,12 +89,11 @@ def search_with_rerank(
 
         if indices:
             reranked = [candidates[i] for i in indices[:rerank_top_k]]
-            # Update scores based on rerank position
             for rank, chunk in enumerate(reranked):
                 chunk["rerank_score"] = 1.0 - (rank / len(reranked))
             return reranked
 
-    except (ValueError, Exception) as e:
+    except Exception as e:
         logger.warning("Reranking failed, returning original order: %s", e)
 
     return candidates[:rerank_top_k]

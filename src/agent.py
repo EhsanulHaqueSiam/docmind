@@ -2,16 +2,9 @@ from __future__ import annotations
 
 import logging
 
-from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
 from vertexai.generative_models import GenerativeModel
 
-from src.config import settings
+from src.config import gcp_retry, settings
 from src.retrieve import search_with_rerank
 
 logger = logging.getLogger(__name__)
@@ -27,6 +20,16 @@ Rules:
 - For multi-part questions, address each part separately.
 """
 
+_models: dict[str, GenerativeModel] = {}
+
+
+def _get_model(model_name: str) -> GenerativeModel:
+    if model_name not in _models:
+        _models[model_name] = GenerativeModel(
+            model_name, system_instruction=SYSTEM_PROMPT
+        )
+    return _models[model_name]
+
 
 def _build_context(chunks: list[dict]) -> str:
     parts = []
@@ -41,13 +44,7 @@ def _build_context(chunks: list[dict]) -> str:
     return "\n\n---\n\n".join(parts)
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(
-        (ResourceExhausted, ServiceUnavailable, ConnectionError)
-    ),
-)
+@gcp_retry
 def _generate(model: GenerativeModel, prompt: str) -> str:
     response = model.generate_content(prompt)
     if not response.candidates:
@@ -55,29 +52,10 @@ def _generate(model: GenerativeModel, prompt: str) -> str:
     return response.text
 
 
-def query(question: str, use_pro: bool = False) -> dict:
-    """Answer a question using RAG with Gemini."""
-    # Retrieve relevant chunks
-    chunks = search_with_rerank(question)
-
-    if not chunks:
-        return {
-            "answer": "No relevant documents found. Please upload some documents first.",
-            "sources": [],
-            "model": None,
-            "chunks_used": 0,
-            "fallback": False,
-        }
-
-    # Build context
+def _answer_with_chunks(question: str, chunks: list[dict], model_name: str) -> dict:
+    """Generate an answer from pre-retrieved chunks."""
     context = _build_context(chunks)
-
-    # Select model
-    model_name = settings.gemini_pro_model if use_pro else settings.gemini_flash_model
-    model = GenerativeModel(
-        model_name,
-        system_instruction=SYSTEM_PROMPT,
-    )
+    model = _get_model(model_name)
 
     prompt = (
         f"Context:\n{context}\n\n"
@@ -86,8 +64,6 @@ def query(question: str, use_pro: bool = False) -> dict:
     )
 
     answer = _generate(model, prompt)
-
-    # Extract unique source filenames
     sources = list({c["filename"] for c in chunks})
 
     return {
@@ -99,11 +75,38 @@ def query(question: str, use_pro: bool = False) -> dict:
     }
 
 
+def query(question: str, use_pro: bool = False) -> dict:
+    """Answer a question using RAG with Gemini."""
+    chunks = search_with_rerank(question)
+
+    if not chunks:
+        return {
+            "answer": "No relevant documents found. Please upload some documents first.",
+            "sources": [],
+            "model": None,
+            "chunks_used": 0,
+            "fallback": False,
+        }
+
+    model_name = settings.gemini_pro_model if use_pro else settings.gemini_flash_model
+    return _answer_with_chunks(question, chunks, model_name)
+
+
 def query_with_fallback(question: str) -> dict:
     """Try Flash first, fall back to Pro if the answer seems insufficient."""
-    result = query(question, use_pro=False)
+    chunks = search_with_rerank(question)
 
-    # Simple heuristic: if Flash gives a very short or uncertain answer, try Pro
+    if not chunks:
+        return {
+            "answer": "No relevant documents found. Please upload some documents first.",
+            "sources": [],
+            "model": None,
+            "chunks_used": 0,
+            "fallback": False,
+        }
+
+    result = _answer_with_chunks(question, chunks, settings.gemini_flash_model)
+
     answer = result.get("answer", "")
     uncertain_phrases = [
         "i don't have enough",
@@ -114,9 +117,7 @@ def query_with_fallback(question: str) -> dict:
 
     if len(answer) < 50 or any(p in answer.lower() for p in uncertain_phrases):
         logger.info("Flash answer seems insufficient, falling back to Pro")
-        pro_result = query(question, use_pro=True)
-        pro_result["fallback"] = True
-        return pro_result
+        result = _answer_with_chunks(question, chunks, settings.gemini_pro_model)
+        result["fallback"] = True
 
-    result["fallback"] = False
     return result

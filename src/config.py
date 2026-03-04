@@ -1,4 +1,23 @@
+from typing import Literal
+
+from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
 from pydantic_settings import BaseSettings
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+
+# Shared retry decorator for all GCP/Qdrant API calls
+gcp_retry = retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    retry=retry_if_exception_type(
+        (ResourceExhausted, ServiceUnavailable, ConnectionError)
+    ),
+)
 
 
 class Settings(BaseSettings):
@@ -22,7 +41,7 @@ class Settings(BaseSettings):
     qdrant_collection: str = "rag_documents"
 
     # Storage
-    storage_mode: str = "local"  # "local" or "gcs"
+    storage_mode: Literal["local", "gcs"] = "local"
     docs_directory: str = "docs"
     gcs_bucket: str = ""
 

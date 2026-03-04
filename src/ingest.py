@@ -9,17 +9,10 @@ from uuid import uuid4
 
 from docling.chunking import HierarchicalChunker
 from docling.document_converter import DocumentConverter
-from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
 from qdrant_client import QdrantClient, models
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
 from vertexai.language_models import TextEmbeddingModel
 
-from src.config import settings
+from src.config import gcp_retry, settings
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +64,12 @@ def get_qdrant() -> QdrantClient:
     return _qdrant
 
 
+def _match_filter(key: str, value: str) -> models.Filter:
+    return models.Filter(
+        must=[models.FieldCondition(key=key, match=models.MatchValue(value=value))]
+    )
+
+
 def ensure_collection() -> None:
     client = get_qdrant()
     collections = [c.name for c in client.get_collections().collections]
@@ -107,44 +106,29 @@ def _is_already_ingested(file_hash: str) -> bool:
     client = get_qdrant()
     results = client.scroll(
         collection_name=settings.qdrant_collection,
-        scroll_filter=models.Filter(
-            must=[
-                models.FieldCondition(
-                    key="file_hash",
-                    match=models.MatchValue(value=file_hash),
-                )
-            ]
-        ),
+        scroll_filter=_match_filter("file_hash", file_hash),
         limit=1,
     )
     return len(results[0]) > 0
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(
-        (ResourceExhausted, ServiceUnavailable, ConnectionError)
-    ),
-)
+@gcp_retry
+def _embed_batch(model: TextEmbeddingModel, batch: list[str]) -> list[list[float]]:
+    embeddings = model.get_embeddings(batch)
+    return [e.values for e in embeddings]
+
+
 def embed_texts(texts: list[str]) -> list[list[float]]:
     model = _get_embed_model()
     batch_size = settings.embedding_batch_size
     all_embeddings = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
-        embeddings = model.get_embeddings(batch)
-        all_embeddings.extend([e.values for e in embeddings])
+        all_embeddings.extend(_embed_batch(model, batch))
     return all_embeddings
 
 
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    retry=retry_if_exception_type(
-        (ResourceExhausted, ServiceUnavailable, ConnectionError)
-    ),
-)
+@gcp_retry
 def _upsert_points(client: QdrantClient, points: list[models.PointStruct]) -> None:
     client.upsert(
         collection_name=settings.qdrant_collection,
@@ -154,10 +138,12 @@ def _upsert_points(client: QdrantClient, points: list[models.PointStruct]) -> No
 
 def ingest_file(path: Path) -> dict:
     path = Path(path)
-    if not path.exists():
+
+    try:
+        file_hash = _file_hash(path)
+    except FileNotFoundError:
         raise FileNotFoundError(f"File not found: {path}")
 
-    file_hash = _file_hash(path)
     if _is_already_ingested(file_hash):
         logger.info("Skipping already ingested file: %s", path.name)
         return {
@@ -254,16 +240,7 @@ def delete_document(doc_id: str) -> bool:
     client = get_qdrant()
     client.delete(
         collection_name=settings.qdrant_collection,
-        points_selector=models.FilterSelector(
-            filter=models.Filter(
-                must=[
-                    models.FieldCondition(
-                        key="doc_id",
-                        match=models.MatchValue(value=doc_id),
-                    )
-                ]
-            )
-        ),
+        points_selector=models.FilterSelector(filter=_match_filter("doc_id", doc_id)),
     )
     return True
 
