@@ -47,7 +47,9 @@ class LocalStorage:
         return Path(path).read_bytes()
 
     def save_file(self, filename: str, data: bytes) -> Path:
-        dest = self.base_dir / filename
+        dest = (self.base_dir / filename).resolve()
+        if not str(dest).startswith(str(self.base_dir.resolve())):
+            raise ValueError(f"Invalid filename: {filename}")
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(data)
         return dest
@@ -62,7 +64,7 @@ class GCSStorage:
 
         client = storage.Client(project=settings.gcp_project_id)
         self.bucket = client.bucket(bucket_name)
-        self._local_cache = Path("/tmp/rag_gcs_cache")
+        self._local_cache = Path("/tmp/docmind_gcs_cache")
         self._local_cache.mkdir(parents=True, exist_ok=True)
 
     def list_files(self) -> list[Path]:

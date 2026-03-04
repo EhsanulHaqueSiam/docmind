@@ -9,16 +9,15 @@ from uuid import uuid4
 
 from docling.chunking import HierarchicalChunker
 from docling.document_converter import DocumentConverter
+from google.genai.types import EmbedContentConfig
 from qdrant_client import QdrantClient, models
-from vertexai.language_models import TextEmbeddingModel
 
-from src.config import gcp_retry, settings
+from src.config import gcp_retry, get_genai_client, settings
 
 logger = logging.getLogger(__name__)
 
 _converter: DocumentConverter | None = None
 _chunker: HierarchicalChunker | None = None
-_embed_model: TextEmbeddingModel | None = None
 _qdrant: QdrantClient | None = None
 _init_lock = threading.Lock()
 
@@ -39,17 +38,6 @@ def _get_chunker() -> HierarchicalChunker:
             if _chunker is None:
                 _chunker = HierarchicalChunker()
     return _chunker
-
-
-def _get_embed_model() -> TextEmbeddingModel:
-    global _embed_model
-    if _embed_model is None:
-        with _init_lock:
-            if _embed_model is None:
-                _embed_model = TextEmbeddingModel.from_pretrained(
-                    settings.embedding_model
-                )
-    return _embed_model
 
 
 def get_qdrant() -> QdrantClient:
@@ -113,18 +101,29 @@ def _is_already_ingested(file_hash: str) -> bool:
 
 
 @gcp_retry
-def _embed_batch(model: TextEmbeddingModel, batch: list[str]) -> list[list[float]]:
-    embeddings = model.get_embeddings(batch)
-    return [e.values for e in embeddings]
+def _embed_batch(texts: list[str], task_type: str) -> list[list[float]]:
+    client = get_genai_client()
+    response = client.models.embed_content(
+        model=settings.embedding_model,
+        contents=texts,
+        config=EmbedContentConfig(
+            task_type=task_type,
+            output_dimensionality=settings.embedding_dimension,
+        ),
+    )
+    return [e.values for e in response.embeddings]
 
 
-def embed_texts(texts: list[str]) -> list[list[float]]:
-    model = _get_embed_model()
+def embed_texts(
+    texts: list[str], task_type: str = "RETRIEVAL_DOCUMENT"
+) -> list[list[float]]:
+    if not texts:
+        return []
     batch_size = settings.embedding_batch_size
-    all_embeddings = []
+    all_embeddings: list[list[float]] = []
     for i in range(0, len(texts), batch_size):
         batch = texts[i : i + batch_size]
-        all_embeddings.extend(_embed_batch(model, batch))
+        all_embeddings.extend(_embed_batch(batch, task_type))
     return all_embeddings
 
 
@@ -170,8 +169,8 @@ def ingest_file(path: Path) -> dict:
     # Extract text from chunks
     chunk_texts = [chunk.text for chunk in chunks]
 
-    # Embed all chunks
-    embeddings = embed_texts(chunk_texts)
+    # Embed all chunks (using RETRIEVAL_DOCUMENT task type for indexing)
+    embeddings = embed_texts(chunk_texts, task_type="RETRIEVAL_DOCUMENT")
 
     # Build Qdrant points
     points = []
@@ -238,6 +237,15 @@ def ingest_directory(directory: Path) -> list[dict]:
 
 def delete_document(doc_id: str) -> bool:
     client = get_qdrant()
+    # Check if document exists
+    results = client.scroll(
+        collection_name=settings.qdrant_collection,
+        scroll_filter=_match_filter("doc_id", doc_id),
+        limit=1,
+    )
+    if not results[0]:
+        return False
+
     client.delete(
         collection_name=settings.qdrant_collection,
         points_selector=models.FilterSelector(filter=_match_filter("doc_id", doc_id)),

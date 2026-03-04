@@ -19,7 +19,7 @@ run = "docker compose down"
 
 [tasks.logs]
 description = "Tail application logs"
-run = "docker compose logs -f app"
+run = "docker compose logs -f docmind"
 
 [tasks.qdrant]
 description = "Start only Qdrant (for local dev without Docker app)"
@@ -37,11 +37,11 @@ uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 [tasks.ingest]
 description = "Trigger manual ingestion of docs/"
-run = "curl -s -X POST http://localhost:8000/documents/ingest | python -m json.tool"
+run = "curl -s -X POST http://localhost:8000/api/v1/documents/ingest | python -m json.tool"
 
 [tasks.health]
 description = "Check service health"
-run = "curl -s http://localhost:8000/health | python -m json.tool"
+run = "curl -s http://localhost:8000/api/v1/health | python -m json.tool"
 
 [tasks.install]
 description = "Install dependencies"
@@ -49,7 +49,7 @@ run = "uv sync"
 
 [tasks.build]
 description = "Build Docker image"
-run = "docker build -t rag-api ."
+run = "docker build -t docmind-api ."
 
 [tasks.lint]
 description = "Run linter"

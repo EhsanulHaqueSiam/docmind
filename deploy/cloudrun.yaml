@@ -1,7 +1,7 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: rag-api
+  name: docmind-api
 spec:
   template:
     metadata:
@@ -13,7 +13,7 @@ spec:
       containerConcurrency: 80
       timeoutSeconds: 300
       containers:
-        - image: gcr.io/PROJECT_ID/rag-api:latest
+        - image: gcr.io/PROJECT_ID/docmind-api:latest
           ports:
             - containerPort: 8000
           resources:
@@ -31,4 +31,4 @@ spec:
               value: "100"
           envFrom:
             - secretRef:
-                name: rag-secrets
+                name: docmind-secrets

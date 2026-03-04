@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import logging
-import threading
 
-from vertexai.generative_models import GenerativeModel
+from google.genai import types
 
-from src.config import gcp_retry, settings
+from src.config import gcp_retry, get_genai_client, settings
 from src.retrieve import search_with_rerank
 
 logger = logging.getLogger(__name__)
@@ -23,18 +22,13 @@ Rules:
 
 _SAFETY_BLOCKED = "could not generate a response due to safety filters"
 
-_models: dict[str, GenerativeModel] = {}
-_model_lock = threading.Lock()
-
-
-def _get_model(model_name: str) -> GenerativeModel:
-    if model_name not in _models:
-        with _model_lock:
-            if model_name not in _models:
-                _models[model_name] = GenerativeModel(
-                    model_name, system_instruction=SYSTEM_PROMPT
-                )
-    return _models[model_name]
+_NO_DOCS_RESULT = {
+    "answer": "No relevant documents found. Please upload some documents first.",
+    "sources": [],
+    "model": None,
+    "chunks_used": 0,
+    "fallback": False,
+}
 
 
 def _build_context(chunks: list[dict]) -> str:
@@ -51,8 +45,13 @@ def _build_context(chunks: list[dict]) -> str:
 
 
 @gcp_retry
-def _generate(model: GenerativeModel, prompt: str) -> str:
-    response = model.generate_content(prompt)
+def _generate(prompt: str, model_name: str) -> str:
+    client = get_genai_client()
+    response = client.models.generate_content(
+        model=model_name,
+        contents=prompt,
+        config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+    )
     if not response.candidates:
         logger.warning("Response blocked by safety filters")
         return f"The model {_SAFETY_BLOCKED}."
@@ -62,7 +61,6 @@ def _generate(model: GenerativeModel, prompt: str) -> str:
 def _answer_with_chunks(question: str, chunks: list[dict], model_name: str) -> dict:
     """Generate an answer from pre-retrieved chunks."""
     context = _build_context(chunks)
-    model = _get_model(model_name)
 
     prompt = (
         f"Context:\n{context}\n\n"
@@ -70,7 +68,7 @@ def _answer_with_chunks(question: str, chunks: list[dict], model_name: str) -> d
         f"Answer the question based on the context above. Cite sources using [filename] notation."
     )
 
-    answer = _generate(model, prompt)
+    answer = _generate(prompt, model_name)
     sources = list({c["filename"] for c in chunks})
 
     return {
@@ -80,15 +78,6 @@ def _answer_with_chunks(question: str, chunks: list[dict], model_name: str) -> d
         "chunks_used": len(chunks),
         "fallback": False,
     }
-
-
-_NO_DOCS_RESULT = {
-    "answer": "No relevant documents found. Please upload some documents first.",
-    "sources": [],
-    "model": None,
-    "chunks_used": 0,
-    "fallback": False,
-}
 
 
 def query(question: str, use_pro: bool = False) -> dict:

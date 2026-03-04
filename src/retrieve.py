@@ -1,26 +1,11 @@
 from __future__ import annotations
 
 import logging
-import threading
 
-from vertexai.generative_models import GenerativeModel
-
-from src.config import gcp_retry, settings
+from src.config import gcp_retry, get_genai_client, settings
 from src.ingest import embed_texts, get_qdrant
 
 logger = logging.getLogger(__name__)
-
-_rerank_model: GenerativeModel | None = None
-_rerank_lock = threading.Lock()
-
-
-def _get_rerank_model() -> GenerativeModel:
-    global _rerank_model
-    if _rerank_model is None:
-        with _rerank_lock:
-            if _rerank_model is None:
-                _rerank_model = GenerativeModel(settings.gemini_flash_model)
-    return _rerank_model
 
 
 @gcp_retry
@@ -47,8 +32,21 @@ def _query_qdrant(query_embedding: list[float]) -> list[dict]:
 
 def search(query: str) -> list[dict]:
     """Search documents using dense vector similarity."""
-    query_embedding = embed_texts([query])[0]
+    query_embedding = embed_texts([query], task_type="RETRIEVAL_QUERY")[0]
     return _query_qdrant(query_embedding)
+
+
+@gcp_retry
+def _call_rerank(prompt: str) -> str:
+    """Call Gemini to rerank passages. Returns raw text response."""
+    client = get_genai_client()
+    response = client.models.generate_content(
+        model=settings.gemini_flash_model,
+        contents=prompt,
+    )
+    if not response.candidates:
+        raise ValueError("Reranking response blocked by safety filters")
+    return response.text.strip()
 
 
 def search_with_rerank(query: str) -> list[dict]:
@@ -59,7 +57,6 @@ def search_with_rerank(query: str) -> list[dict]:
         return []
 
     rerank_top_k = settings.rerank_top_k
-    model = _get_rerank_model()
     context_chars = settings.rerank_context_chars
     numbered = "\n".join(
         f"[{i}] {c['text'][:context_chars]}" for i, c in enumerate(candidates)
@@ -72,19 +69,9 @@ def search_with_rerank(query: str) -> list[dict]:
     )
 
     try:
-        response = model.generate_content(prompt)
+        text = _call_rerank(prompt)
     except Exception as e:
-        logger.warning("Reranking API call failed, returning original order: %s", e)
-        return candidates[:rerank_top_k]
-
-    if not response.candidates:
-        logger.warning("Reranking response blocked by safety filters")
-        return candidates[:rerank_top_k]
-
-    try:
-        text = response.text.strip()
-    except ValueError as e:
-        logger.warning("Could not extract reranking text: %s", e)
+        logger.warning("Reranking failed, returning original order: %s", e)
         return candidates[:rerank_top_k]
 
     # Parse the ranking with deduplication

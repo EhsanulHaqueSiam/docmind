@@ -1,7 +1,7 @@
 [project]
-name = "rag"
-version = "0.1.0"
-description = "RAG system with Vertex AI Gemini, Docling, and Qdrant"
+name = "docmind"
+version = "0.2.0"
+description = "Document intelligence powered by Gemini, Docling, and Qdrant"
 requires-python = ">=3.12,<3.14"
 dependencies = [
     "fastapi>=0.115.0",
@@ -9,7 +9,7 @@ dependencies = [
     "docling>=2.15.0",
     "qdrant-client>=1.12.0,<1.17.0",
     "watchdog>=6.0.0",
-    "google-cloud-aiplatform>=1.74.0",
+    "google-genai>=1.0.0",
     "google-cloud-storage>=2.19.0",
     "pydantic-settings>=2.7.0",
     "python-multipart>=0.0.18",

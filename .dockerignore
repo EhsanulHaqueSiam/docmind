@@ -1,0 +1,16 @@
+.git
+.venv
+.env
+.ruff_cache
+__pycache__
+*.py[cod]
+docs/*
+!docs/.gitkeep
+*.egg-info
+dist
+build
+deploy
+README.md
+mise.toml
+.python-version
+.gitignore

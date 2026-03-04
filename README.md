@@ -1,17 +1,19 @@
-# RAG API
+# DocMind
 
-A production-ready Retrieval-Augmented Generation system built with **Vertex AI Gemini**, **Docling**, and **Qdrant**.
+Document intelligence API powered by **Gemini**, **Docling**, and **Qdrant**.
 
-Upload documents, and the system automatically parses, chunks, embeds, and indexes them. Ask questions and get grounded answers with source citations.
+Upload documents, and the system automatically parses, chunks, embeds, and indexes them. Ask questions and get grounded answers with source citations, or search for relevant passages directly.
 
 ## Features
 
 - **Multi-format ingestion** — PDF, DOCX, PPTX, XLSX, HTML, Markdown, CSV, images (PNG/JPG/TIFF/BMP)
-- **Semantic search** — Dense vector similarity with Vertex AI embeddings (`text-embedding-005`)
+- **Semantic search** — Dense vector similarity with Gemini embeddings (`gemini-embedding-001`)
+- **Asymmetric retrieval** — Separate `RETRIEVAL_DOCUMENT` / `RETRIEVAL_QUERY` task types for optimal accuracy
 - **Gemini reranking** — LLM-based passage reranking for higher relevance
 - **Smart fallback** — Tries Gemini Flash first, falls back to Pro if the answer seems insufficient
 - **Auto-ingestion** — File watcher monitors `docs/` and ingests new/modified files automatically
-- **Retry resilience** — Exponential backoff on all Vertex AI and Qdrant API calls
+- **Retry resilience** — Exponential backoff on all Gemini and Qdrant API calls
+- **Optional API key auth** — Set `API_KEY` to protect all endpoints
 - **Dual storage** — Local filesystem or Google Cloud Storage
 - **Cloud-ready** — Docker containerized with Cloud Run deployment config
 
@@ -28,7 +30,7 @@ Upload documents, and the system automatically parses, chunks, embeds, and index
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url> && cd rag
+git clone https://github.com/EhsanulHaqueSiam/docmind.git && cd docmind
 uv sync
 ```
 
@@ -50,6 +52,8 @@ Make sure you're authenticated with GCP:
 ```bash
 gcloud auth application-default login
 ```
+
+> **Required GCP APIs**: Enable [Vertex AI API](https://console.cloud.google.com/apis/library/aiplatform.googleapis.com) in your project.
 
 ### 3. Run
 
@@ -74,37 +78,61 @@ docker compose up -d
 
 Drop files into the `docs/` directory — they'll be auto-ingested.
 
-Or upload via API:
+Or use the API:
 
 ```bash
 # Upload a document
-curl -X POST http://localhost:8000/documents/upload \
+curl -X POST http://localhost:8000/api/v1/documents/upload \
   -F "file=@paper.pdf"
 
 # Ask a question
-curl -X POST http://localhost:8000/query \
+curl -X POST http://localhost:8000/api/v1/query \
   -H "Content-Type: application/json" \
   -d '{"question": "What are the key findings?"}'
 
+# Search without generating an answer
+curl -X POST http://localhost:8000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "key findings", "rerank": true}'
+
 # List documents
-curl http://localhost:8000/documents
+curl http://localhost:8000/api/v1/documents
+
+# Collection stats
+curl http://localhost:8000/api/v1/stats
 
 # Health check
-curl http://localhost:8000/health
+curl http://localhost:8000/api/v1/health
 ```
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/query` | Ask a question (`{"question": "...", "use_pro": false}`) |
-| `POST` | `/documents/upload` | Upload and ingest a file (multipart form) |
-| `GET` | `/documents` | List all ingested documents |
-| `DELETE` | `/documents/{doc_id}` | Delete a document and its chunks |
-| `POST` | `/documents/ingest` | Trigger manual re-ingestion of `docs/` |
-| `GET` | `/health` | Health check with Qdrant status |
+| `POST` | `/api/v1/query` | Ask a question (`{"question": "...", "use_pro": false}`) |
+| `POST` | `/api/v1/search` | Semantic search (`{"query": "...", "rerank": true}`) |
+| `POST` | `/api/v1/documents/upload` | Upload and ingest a file (multipart form) |
+| `GET` | `/api/v1/documents` | List all ingested documents (supports `?offset=0&limit=50`) |
+| `DELETE` | `/api/v1/documents/{doc_id}` | Delete a document and its chunks |
+| `POST` | `/api/v1/documents/ingest` | Trigger manual re-ingestion of `docs/` |
+| `GET` | `/api/v1/stats` | Collection statistics (point count, vector count) |
+| `GET` | `/api/v1/health` | Health check with Qdrant status |
 
 Interactive docs at `http://localhost:8000/docs`.
+
+## Authentication
+
+Set the `API_KEY` environment variable to require an `X-API-Key` header on all requests:
+
+```env
+API_KEY=your-secret-key
+```
+
+```bash
+curl -H "X-API-Key: your-secret-key" http://localhost:8000/api/v1/health
+```
+
+Leave `API_KEY` empty for open access (default).
 
 ## Configuration
 
@@ -116,13 +144,16 @@ All settings are configurable via environment variables (see `.env.example`):
 | `GCP_LOCATION` | `us-central1` | Vertex AI region |
 | `GEMINI_FLASH_MODEL` | `gemini-2.5-flash` | Fast model for queries |
 | `GEMINI_PRO_MODEL` | `gemini-2.5-pro` | Fallback model for complex queries |
-| `EMBEDDING_MODEL` | `text-embedding-005` | Vertex AI embedding model |
+| `EMBEDDING_MODEL` | `gemini-embedding-001` | Gemini embedding model |
+| `EMBEDDING_DIMENSION` | `768` | Embedding output dimensions (768 or 3072) |
 | `QDRANT_URL` | `http://localhost:6333` | Qdrant connection URL |
 | `QDRANT_API_KEY` | — | Qdrant API key (for Qdrant Cloud) |
-| `QDRANT_COLLECTION` | `rag_documents` | Qdrant collection name |
+| `QDRANT_COLLECTION` | `docmind_documents` | Qdrant collection name |
 | `STORAGE_MODE` | `local` | `local` or `gcs` |
 | `DOCS_DIRECTORY` | `docs` | Local document directory |
 | `GCS_BUCKET` | — | GCS bucket name (when `STORAGE_MODE=gcs`) |
+| `API_KEY` | — | API key for authentication (empty = open access) |
+| `CORS_ORIGINS` | `*` | Comma-separated allowed origins |
 | `TOP_K` | `10` | Number of chunks to retrieve |
 | `RERANK_TOP_K` | `5` | Number of chunks after reranking |
 | `MAX_UPLOAD_SIZE_MB` | `100` | Maximum upload file size |
@@ -134,16 +165,16 @@ All settings are configurable via environment variables (see `.env.example`):
 
 - Qdrant Cloud cluster (or self-hosted Qdrant with a stable URL)
 - GCS bucket for document storage
-- GCP Secret Manager secret `rag-secrets` with:
-  - `GCP_PROJECT_ID`, `QDRANT_API_KEY`, `GCS_BUCKET`
+- GCP Secret Manager secret `docmind-secrets` with: `GCP_PROJECT_ID`, `QDRANT_API_KEY`, `GCS_BUCKET`
 
 ### Deploy
 
 ```bash
-# Build and push image
 export PROJECT_ID=your-gcp-project-id
-docker build -t gcr.io/$PROJECT_ID/rag-api:latest .
-docker push gcr.io/$PROJECT_ID/rag-api:latest
+
+# Build and push image
+docker build -t gcr.io/$PROJECT_ID/docmind-api:latest .
+docker push gcr.io/$PROJECT_ID/docmind-api:latest
 
 # Update deploy/cloudrun.yaml with your PROJECT_ID and Qdrant URL, then:
 sed -i "s/PROJECT_ID/$PROJECT_ID/g" deploy/cloudrun.yaml
@@ -153,16 +184,11 @@ gcloud run services replace deploy/cloudrun.yaml --region us-central1
 ## Development
 
 ```bash
-# Install with dev deps
-uv sync
+uv sync                        # Install deps
+uv run ruff check src/         # Lint
+uv run ruff format src/        # Format
 
-# Run linter
-uv run ruff check src/
-
-# Format code
-uv run ruff format src/
-
-# Or use mise tasks
+# Or with mise
 mise run lint
 mise run format
 ```
@@ -170,12 +196,15 @@ mise run format
 ## Architecture
 
 ```
-POST /query
-  → search_with_rerank() → embed query → Qdrant search → Gemini rerank
-  → query() → build context → Gemini generate → response with sources
+POST /api/v1/query
+  → search_with_rerank() → embed query (RETRIEVAL_QUERY) → Qdrant → Gemini rerank
+  → query() → build context → Gemini generate → answer with sources
 
-POST /documents/upload
-  → save to storage → parse with Docling → chunk → embed → upsert to Qdrant
+POST /api/v1/search
+  → search_with_rerank() → embed query → Qdrant → Gemini rerank → raw chunks
+
+POST /api/v1/documents/upload
+  → validate + sanitize → save to storage → Docling parse → chunk → embed (RETRIEVAL_DOCUMENT) → Qdrant
 
 File watcher (docs/)
   → detect new/modified files → debounce → ingest_file()

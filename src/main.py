@@ -6,11 +6,10 @@ import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-import vertexai
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.config import settings
+from src.config import get_genai_client, settings
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -22,14 +21,18 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting RAG application...")
+    logger.info("Starting DocMind...")
 
-    # Init Vertex AI
+    # Eagerly init genai client (validates GCP credentials early)
     if settings.gcp_project_id:
-        vertexai.init(
-            project=settings.gcp_project_id,
-            location=settings.gcp_location,
-        )
+        try:
+            get_genai_client()
+            logger.info(
+                "GenAI client initialized (project=%s)", settings.gcp_project_id
+            )
+        except Exception as e:
+            logger.error("Failed to initialize GenAI client: %s", e)
+            raise
 
     # Ensure Qdrant collection exists (retry for startup race with qdrant container)
     from src.ingest import ensure_collection
@@ -73,20 +76,22 @@ async def lifespan(app: FastAPI):
     # Shutdown
     if watcher is not None:
         watcher.stop()
-    logger.info("RAG application stopped")
+    logger.info("DocMind stopped")
 
 
 app = FastAPI(
-    title="RAG API",
-    description="RAG system with Vertex AI Gemini, Docling, and Qdrant",
-    version="0.1.0",
+    title="DocMind API",
+    description="Document intelligence powered by Gemini, Docling, and Qdrant",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
+# CORS — don't combine allow_credentials=True with wildcard origin
+cors_origins = [o.strip() for o in settings.cors_origins.split(",")]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials=("*" not in cors_origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )
