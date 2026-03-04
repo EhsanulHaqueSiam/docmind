@@ -5,257 +5,397 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DocMind — Documentation</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/yaml.min.js"></script>
 <style>
+/* ============================================
+   DOCMIND DOCS — Editorial Noir Aesthetic
+   Inspired by: Stripe docs meets editorial print
+   ============================================ */
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  30% { transform: translate(3%, -15%); }
+  50% { transform: translate(-15%, 3%); }
+  70% { transform: translate(7%, 8%); }
+  90% { transform: translate(-10%, 1%); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(207, 155, 98, 0); }
+  50% { box-shadow: 0 0 20px 2px rgba(207, 155, 98, 0.15); }
+}
+
 :root {
-  --bg: #0a0a0a;
-  --bg-card: #141414;
-  --bg-code: #1a1a2e;
-  --border: #262626;
-  --text: #e5e5e5;
-  --text-dim: #a3a3a3;
-  --text-dimmer: #737373;
-  --accent: #6366f1;
-  --accent-light: #818cf8;
-  --green: #22c55e;
-  --green-dim: #166534;
-  --blue: #3b82f6;
-  --blue-dim: #1e3a5f;
-  --amber: #f59e0b;
-  --amber-dim: #78350f;
-  --red: #ef4444;
-  --red-dim: #7f1d1d;
-  --purple: #a855f7;
-  --radius: 10px;
-  --font: 'Inter', -apple-system, system-ui, sans-serif;
-  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --ink: #0c0b0a;
+  --paper: #f6f1eb;
+  --paper-warm: #efe8de;
+  --paper-cool: #eae5dd;
+  --cream: #faf7f2;
+  --gold: #cf9b62;
+  --gold-soft: #d4a96e;
+  --gold-deep: #a67840;
+  --copper: #b87333;
+  --charcoal: #2a2725;
+  --graphite: #4a4643;
+  --stone: #7a756f;
+  --pebble: #a39e97;
+  --mist: #c4bfb8;
+  --ivory: #f0ebe4;
+  --code-bg: #1a1816;
+  --code-border: #2e2a26;
+  --green: #5b8c5a;
+  --blue: #5a7fa8;
+  --red: #b85450;
+  --amber: #c49a3c;
+  --serif: 'Instrument Serif', 'Georgia', serif;
+  --sans: 'DM Sans', 'Helvetica Neue', sans-serif;
+  --mono: 'IBM Plex Mono', 'Menlo', monospace;
+  --radius: 4px;
+  --radius-lg: 8px;
 }
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+
 body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  line-height: 1.7;
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--charcoal);
+  line-height: 1.75;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
-}
-a { color: var(--accent-light); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-/* --- NAV --- */
-nav {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,10,10,0.85);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-}
-.nav-inner {
-  max-width: 1200px; margin: 0 auto;
-  display: flex; align-items: center; justify-content: space-between;
-  height: 60px;
-}
-.nav-logo {
-  font-size: 20px; font-weight: 700; color: var(--text);
-  display: flex; align-items: center; gap: 8px;
-}
-.nav-logo span { color: var(--accent-light); }
-.nav-links { display: flex; gap: 28px; }
-.nav-links a {
-  color: var(--text-dim); font-size: 14px; font-weight: 500;
-  transition: color .15s;
-}
-.nav-links a:hover { color: var(--text); text-decoration: none; }
-.nav-links a.ext { color: var(--accent-light); }
-
-/* --- HERO --- */
-.hero {
-  max-width: 1200px; margin: 0 auto;
-  padding: 80px 24px 60px;
-  text-align: center;
-}
-.hero h1 { font-size: 48px; font-weight: 700; letter-spacing: -1px; margin-bottom: 16px; }
-.hero h1 span { background: linear-gradient(135deg, var(--accent-light), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.hero p { font-size: 18px; color: var(--text-dim); max-width: 640px; margin: 0 auto 32px; }
-.hero-badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 14px; border-radius: 20px;
-  font-size: 13px; font-weight: 500;
-  border: 1px solid var(--border);
-  background: var(--bg-card);
-  color: var(--text-dim);
-}
-.badge .dot {
-  width: 8px; height: 8px; border-radius: 50%;
-}
-.badge .dot.green { background: var(--green); }
-.badge .dot.blue { background: var(--blue); }
-.badge .dot.amber { background: var(--amber); }
-.badge .dot.purple { background: var(--purple); }
-
-/* --- CONTENT --- */
-.content { max-width: 1200px; margin: 0 auto; padding: 0 24px 80px; }
-
-section { margin-bottom: 64px; }
-section > h2 {
-  font-size: 28px; font-weight: 700; margin-bottom: 8px;
-  padding-bottom: 12px; border-bottom: 1px solid var(--border);
-}
-section > h2 .hash { color: var(--accent); margin-right: 8px; opacity: 0; transition: opacity .15s; }
-section > h2:hover .hash { opacity: 1; }
-section > p.desc { color: var(--text-dim); margin-bottom: 24px; margin-top: 4px; }
-
-h3 { font-size: 20px; font-weight: 600; margin: 32px 0 12px; }
-h4 { font-size: 16px; font-weight: 600; margin: 20px 0 8px; color: var(--text-dim); }
-p { margin-bottom: 12px; }
-
-/* --- STEPS --- */
-.steps { display: grid; gap: 20px; margin-top: 20px; }
-.step {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 24px;
   position: relative;
 }
-.step-num {
-  position: absolute; top: -12px; left: 20px;
-  background: var(--accent); color: white;
-  width: 24px; height: 24px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700;
-}
-.step h3 { margin-top: 4px; margin-bottom: 8px; }
-.step p { color: var(--text-dim); font-size: 15px; }
 
-/* --- CODE --- */
+/* Subtle paper grain texture overlay */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 9999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px;
+  animation: grain 8s steps(10) infinite;
+}
+
+a { color: var(--gold-deep); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+a:hover { border-bottom-color: var(--gold-deep); }
+
+::selection { background: var(--gold); color: var(--cream); }
+
+/* ===== NAVIGATION ===== */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(246,241,235,0.92);
+  backdrop-filter: blur(20px) saturate(1.2);
+  border-bottom: 1px solid var(--mist);
+}
+.nav-inner {
+  max-width: 1140px; margin: 0 auto; padding: 0 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px;
+}
+.nav-logo {
+  font-family: var(--serif); font-size: 22px; color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.nav-logo em { font-style: italic; color: var(--gold-deep); }
+.nav-links { display: flex; gap: 32px; }
+.nav-links a {
+  font-size: 13px; font-weight: 500; letter-spacing: 0.3px;
+  text-transform: uppercase; color: var(--stone);
+  border-bottom: none; transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); border-bottom: none; }
+.nav-links a.swagger {
+  color: var(--gold-deep); font-weight: 600;
+}
+
+/* ===== HERO ===== */
+.hero {
+  max-width: 1140px; margin: 0 auto; padding: 100px 32px 80px;
+  animation: fadeUp 0.8s ease-out;
+}
+.hero-eyebrow {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--gold-deep);
+  margin-bottom: 20px; font-weight: 500;
+}
+.hero h1 {
+  font-family: var(--serif); font-size: clamp(42px, 6vw, 72px);
+  font-weight: 400; line-height: 1.1; letter-spacing: -1.5px;
+  color: var(--ink); margin-bottom: 24px;
+  max-width: 700px;
+}
+.hero h1 em { font-style: italic; color: var(--gold-deep); }
+.hero-desc {
+  font-size: 17px; color: var(--graphite); max-width: 560px;
+  line-height: 1.8; margin-bottom: 40px;
+}
+.hero-pills { display: flex; gap: 10px; flex-wrap: wrap; }
+.pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 100px;
+  font-size: 12px; font-weight: 500; letter-spacing: 0.2px;
+  border: 1px solid var(--mist);
+  background: var(--cream);
+  color: var(--graphite);
+  transition: all 0.2s;
+}
+.pill:hover { border-color: var(--gold); color: var(--ink); }
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+.pill-dot.g { background: var(--green); }
+.pill-dot.b { background: var(--blue); }
+.pill-dot.a { background: var(--amber); }
+.pill-dot.c { background: var(--copper); }
+
+/* ===== CONTENT ===== */
+.content { max-width: 1140px; margin: 0 auto; padding: 0 32px 100px; }
+
+section {
+  margin-bottom: 80px;
+  animation: fadeUp 0.6s ease-out both;
+}
+section:nth-child(2) { animation-delay: 0.1s; }
+section:nth-child(3) { animation-delay: 0.15s; }
+section:nth-child(4) { animation-delay: 0.2s; }
+
+.section-label {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--gold-deep);
+  margin-bottom: 12px; font-weight: 500;
+}
+section > h2 {
+  font-family: var(--serif); font-size: 36px; font-weight: 400;
+  color: var(--ink); letter-spacing: -0.5px; margin-bottom: 8px;
+  line-height: 1.2;
+}
+section > p.desc {
+  color: var(--stone); font-size: 16px; margin-bottom: 32px;
+  max-width: 600px;
+}
+h3 {
+  font-family: var(--serif); font-size: 24px; font-weight: 400;
+  color: var(--ink); margin: 40px 0 16px; letter-spacing: -0.3px;
+}
+h4 {
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--stone); margin: 24px 0 10px;
+}
+p { margin-bottom: 14px; }
+ul { margin-left: 20px; margin-bottom: 16px; color: var(--graphite); }
+li { margin-bottom: 4px; }
+
+/* ===== CARDS / STEPS ===== */
+.steps { display: grid; gap: 1px; margin-top: 24px; background: var(--mist); border-radius: var(--radius-lg); overflow: hidden; }
+.step {
+  background: var(--cream); padding: 32px;
+  position: relative;
+}
+.step::before {
+  content: attr(data-num);
+  position: absolute; top: 32px; right: 32px;
+  font-family: var(--serif); font-size: 48px;
+  color: var(--mist); font-style: italic; line-height: 1;
+}
+.step h3 { margin-top: 0; font-size: 22px; }
+.step p { color: var(--graphite); font-size: 14px; margin-bottom: 12px; }
+
+/* ===== CODE BLOCKS ===== */
 .code-block {
-  position: relative; margin: 16px 0 20px;
-  border-radius: var(--radius); overflow: hidden;
-  border: 1px solid var(--border);
+  position: relative; margin: 14px 0 20px;
+  border-radius: var(--radius-lg); overflow: hidden;
+  border: 1px solid var(--code-border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
 }
 .code-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 8px 16px;
-  background: #111;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px; color: var(--text-dimmer);
-  font-family: var(--mono);
+  background: var(--code-bg);
+  border-bottom: 1px solid var(--code-border);
 }
-.code-header .lang {
-  text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;
+.lang-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--pebble); font-weight: 500;
 }
 .copy-btn {
-  background: none; border: 1px solid var(--border); color: var(--text-dim);
-  padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
-  font-family: var(--font); transition: all .15s;
+  background: none; border: 1px solid var(--code-border);
+  color: var(--pebble); padding: 3px 12px; border-radius: var(--radius);
+  cursor: pointer; font-size: 11px; font-family: var(--sans);
+  font-weight: 500; letter-spacing: 0.3px;
+  transition: all 0.2s;
 }
-.copy-btn:hover { background: var(--border); color: var(--text); }
+.copy-btn:hover { background: rgba(255,255,255,0.06); color: var(--paper); border-color: var(--stone); }
 .copy-btn.copied { color: var(--green); border-color: var(--green); }
-.code-block pre { margin: 0; padding: 16px; overflow-x: auto; }
+.code-block pre {
+  margin: 0; padding: 18px 20px; overflow-x: auto;
+  background: var(--code-bg) !important;
+}
 .code-block code {
-  font-family: var(--mono) !important; font-size: 13.5px;
-  line-height: 1.6;
+  font-family: var(--mono) !important; font-size: 13px;
+  line-height: 1.7; background: none !important;
 }
 
-/* inline code */
+/* Inline code */
 code:not([class]) {
-  background: var(--bg-code); padding: 2px 7px; border-radius: 4px;
-  font-family: var(--mono); font-size: 13.5px; color: var(--accent-light);
+  background: var(--paper-warm); padding: 2px 8px; border-radius: 3px;
+  font-family: var(--mono); font-size: 13px; color: var(--gold-deep);
+  border: 1px solid var(--mist);
 }
 
-/* --- ENDPOINT CARDS --- */
+/* ===== ENDPOINT CARDS ===== */
 .endpoint {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); margin-bottom: 24px;
-  overflow: hidden;
+  background: var(--cream); border: 1px solid var(--mist);
+  border-radius: var(--radius-lg); margin-bottom: 16px;
+  overflow: hidden; transition: border-color 0.2s;
 }
+.endpoint:hover { border-color: var(--pebble); }
 .endpoint-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 20px; cursor: pointer;
-  border-bottom: 1px solid transparent;
-  transition: border-color .15s;
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 24px; cursor: pointer;
+  transition: background 0.15s;
 }
-.endpoint.open .endpoint-header { border-bottom-color: var(--border); }
+.endpoint-header:hover { background: var(--ivory); }
+.endpoint.open .endpoint-header { border-bottom: 1px solid var(--mist); }
 .method {
-  padding: 4px 10px; border-radius: 4px;
-  font-family: var(--mono); font-size: 12px; font-weight: 700;
-  text-transform: uppercase; min-width: 64px; text-align: center;
+  padding: 4px 10px; border-radius: var(--radius);
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 0.5px; min-width: 56px; text-align: center;
 }
-.method.get { background: var(--green-dim); color: var(--green); }
-.method.post { background: var(--blue-dim); color: var(--blue); }
-.method.delete { background: var(--red-dim); color: var(--red); }
-.endpoint-path { font-family: var(--mono); font-size: 14px; font-weight: 500; }
-.endpoint-desc { color: var(--text-dim); font-size: 14px; margin-left: auto; }
-.endpoint-toggle { color: var(--text-dimmer); font-size: 18px; margin-left: 8px; transition: transform .2s; }
-.endpoint.open .endpoint-toggle { transform: rotate(180deg); }
-.endpoint-body { padding: 20px; display: none; }
+.method.get { background: #e8f0e8; color: var(--green); }
+.method.post { background: #e4ecf4; color: var(--blue); }
+.method.delete { background: #f4e4e4; color: var(--red); }
+.endpoint-path { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--ink); }
+.endpoint-desc { color: var(--stone); font-size: 13px; margin-left: auto; }
+.endpoint-chevron {
+  color: var(--pebble); font-size: 12px; margin-left: 8px;
+  transition: transform 0.25s ease;
+}
+.endpoint.open .endpoint-chevron { transform: rotate(180deg); }
+.endpoint-body { padding: 24px; display: none; }
 .endpoint.open .endpoint-body { display: block; }
 
-/* --- TABS --- */
-.tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 1px solid var(--border); }
+/* ===== TABS ===== */
+.tabs { display: flex; gap: 0; border-bottom: 1px solid var(--mist); margin-bottom: 0; }
 .tab {
-  padding: 8px 18px; font-size: 13px; font-weight: 500;
-  color: var(--text-dimmer); cursor: pointer;
+  padding: 10px 20px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  color: var(--pebble); cursor: pointer;
   border-bottom: 2px solid transparent;
-  transition: all .15s;
+  transition: all 0.2s;
 }
-.tab:hover { color: var(--text-dim); }
-.tab.active { color: var(--accent-light); border-bottom-color: var(--accent); }
+.tab:hover { color: var(--graphite); }
+.tab.active { color: var(--gold-deep); border-bottom-color: var(--gold); }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
-/* --- CONFIG TABLE --- */
-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+/* ===== TABLES ===== */
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0;
+  border: 1px solid var(--mist); border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+thead { background: var(--paper-cool); }
 th {
-  text-align: left; font-size: 12px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.5px;
-  color: var(--text-dimmer); padding: 10px 16px;
-  border-bottom: 1px solid var(--border);
+  text-align: left; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--stone); padding: 12px 20px;
+  border-bottom: 1px solid var(--mist);
 }
 td {
-  padding: 10px 16px; font-size: 14px;
-  border-bottom: 1px solid var(--border);
+  padding: 12px 20px; font-size: 14px;
+  border-bottom: 1px solid var(--ivory);
 }
-td:first-child { font-family: var(--mono); font-size: 13px; color: var(--accent-light); }
-td:nth-child(2) { font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
-tr:hover { background: rgba(99,102,241,0.04); }
+td:first-child { font-family: var(--mono); font-size: 13px; color: var(--gold-deep); }
+td:nth-child(2) { font-family: var(--mono); font-size: 13px; color: var(--stone); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(207,155,98,0.04); }
 
-/* --- ARCH DIAGRAM --- */
-.arch-diagram {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 32px;
-  font-family: var(--mono); font-size: 13px; line-height: 1.8;
-  overflow-x: auto; white-space: pre; color: var(--text-dim);
+/* Section header rows */
+.table-section {
+  font-weight: 600; color: var(--ink) !important;
+  font-family: var(--sans) !important; font-size: 12px !important;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  background: var(--paper-cool);
 }
-.arch-diagram .highlight { color: var(--accent-light); font-weight: 600; }
-.arch-diagram .dim { color: var(--text-dimmer); }
-.arch-diagram .green { color: var(--green); }
-.arch-diagram .blue { color: var(--blue); }
-.arch-diagram .amber { color: var(--amber); }
 
-/* --- FOOTER --- */
+/* ===== ARCHITECTURE DIAGRAM ===== */
+.arch {
+  background: var(--code-bg); border: 1px solid var(--code-border);
+  border-radius: var(--radius-lg); padding: 28px 32px;
+  font-family: var(--mono); font-size: 13px; line-height: 2;
+  overflow-x: auto; white-space: pre; color: var(--pebble);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.arch .hi { color: var(--gold-soft); font-weight: 500; }
+.arch .dim { color: #5a5650; }
+.arch .g { color: var(--green); }
+.arch .b { color: #7aa3c8; }
+.arch .a { color: var(--amber); }
+
+/* ===== DEPLOY OPTIONS TABLE ===== */
+.deploy-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1px; margin: 20px 0 32px;
+  background: var(--mist); border-radius: var(--radius-lg); overflow: hidden;
+}
+.deploy-card {
+  background: var(--cream); padding: 28px;
+}
+.deploy-card h4 {
+  font-family: var(--serif); font-size: 20px; font-weight: 400;
+  text-transform: none; letter-spacing: -0.2px; color: var(--ink);
+  margin: 0 0 6px;
+}
+.deploy-card .cost {
+  font-family: var(--mono); font-size: 12px; color: var(--green);
+  font-weight: 500; margin-bottom: 10px;
+}
+.deploy-card p { font-size: 14px; color: var(--graphite); margin: 0; }
+
+/* ===== FOOTER ===== */
 footer {
-  border-top: 1px solid var(--border);
-  padding: 32px 24px; text-align: center;
-  color: var(--text-dimmer); font-size: 14px;
+  border-top: 1px solid var(--mist); padding: 40px 32px;
+  text-align: center;
+}
+footer p { color: var(--pebble); font-size: 13px; }
+footer a { color: var(--stone); border-bottom-color: transparent; }
+footer a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+/* ===== SEPARATOR LINE ===== */
+.divider {
+  width: 48px; height: 1px; background: var(--gold);
+  margin: 48px 0;
 }
 
-/* --- RESPONSIVE --- */
+/* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
-  .hero h1 { font-size: 32px; }
-  .hero { padding: 48px 16px 40px; }
-  .content { padding: 0 16px 48px; }
+  .hero { padding: 60px 20px 48px; }
+  .hero h1 { font-size: 36px; }
+  .content { padding: 0 20px 60px; }
+  .nav-inner { padding: 0 20px; }
   .nav-links { gap: 16px; }
-  .nav-links a { font-size: 13px; }
+  .nav-links a { font-size: 11px; }
   .endpoint-desc { display: none; }
-  table { font-size: 13px; }
-  td, th { padding: 8px 10px; }
+  .deploy-grid { grid-template-columns: 1fr; }
+  section > h2 { font-size: 28px; }
+  .step::before { display: none; }
 }
 </style>
 </head>
@@ -263,160 +403,160 @@ footer {
 
 <nav>
   <div class="nav-inner">
-    <div class="nav-logo"><span>&lt;/&gt;</span> DocMind</div>
+    <div class="nav-logo">Doc<em>Mind</em></div>
     <div class="nav-links">
       <a href="#setup">Setup</a>
       <a href="#api">API</a>
       <a href="#examples">Examples</a>
       <a href="#config">Config</a>
       <a href="#architecture">Architecture</a>
-      <a href="/docs" class="ext">Swagger UI &nearr;</a>
+      <a href="#deploy">Deploy</a>
+      <a href="/docs" class="swagger">Swagger &nearr;</a>
     </div>
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- ===== HERO ===== -->
 <div class="hero">
-  <h1>Welcome to <span>DocMind</span></h1>
-  <p>Document intelligence API powered by Gemini, Docling, and Qdrant. Upload documents, ask questions, get grounded answers with citations.</p>
-  <div class="hero-badges">
-    <span class="badge"><span class="dot green"></span> Gemini 2.5</span>
-    <span class="badge"><span class="dot blue"></span> Qdrant Vector DB</span>
-    <span class="badge"><span class="dot amber"></span> Docling Parser</span>
-    <span class="badge"><span class="dot purple"></span> 13+ File Formats</span>
+  <div class="hero-eyebrow">Documentation &mdash; v0.2</div>
+  <h1>Your documents,<br><em>intelligently</em> understood.</h1>
+  <p class="hero-desc">Upload documents in any format. Ask questions. Get grounded answers with source citations &mdash; powered by Gemini, Docling, and Qdrant.</p>
+  <div class="hero-pills">
+    <span class="pill"><span class="pill-dot g"></span> Gemini 2.5</span>
+    <span class="pill"><span class="pill-dot b"></span> Qdrant Vectors</span>
+    <span class="pill"><span class="pill-dot a"></span> Docling Parser</span>
+    <span class="pill"><span class="pill-dot c"></span> 13 File Formats</span>
   </div>
 </div>
 
 <div class="content">
 
-<!-- =========== SETUP =========== -->
+<!-- ============================== SETUP ============================== -->
 <section id="setup">
-  <h2><a href="#setup"><span class="hash">#</span></a>Getting Started</h2>
-  <p class="desc">Get DocMind running locally in under 5 minutes.</p>
+  <div class="section-label">Getting Started</div>
+  <h2>Setup</h2>
+  <p class="desc">Get DocMind running in under five minutes. You need two things: a Google Cloud project and Docker.</p>
 
-  <h3>What You Need (Accounts &amp; Services)</h3>
-  <p>DocMind requires two external services. Here's exactly what to set up:</p>
-
+  <h3>What You Need</h3>
   <table>
-    <thead><tr><th>Service</th><th>Cost</th><th>What For</th><th>How to Get</th></tr></thead>
+    <thead><tr><th>Service</th><th>Cost</th><th>Purpose</th><th>How to Get</th></tr></thead>
     <tbody>
       <tr>
-        <td style="font-family:var(--font);color:var(--text)">Google Cloud (GCP)</td>
-        <td style="color:var(--green)">Free tier available</td>
-        <td>Gemini models for embeddings, reranking, and answer generation</td>
-        <td>Create a project at <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></td>
+        <td class="table-section" colspan="4">Required</td>
       </tr>
       <tr>
-        <td style="font-family:var(--font);color:var(--text)">Qdrant</td>
-        <td style="color:var(--green)">Free (self-hosted)</td>
-        <td>Vector database for storing and searching document embeddings</td>
-        <td>Run via Docker (included) or use <a href="https://cloud.qdrant.io" target="_blank">Qdrant Cloud</a></td>
+        <td style="font-family:var(--sans);color:var(--ink)">Google Cloud</td>
+        <td style="color:var(--green)">Free tier</td>
+        <td>Gemini models for embeddings, reranking &amp; answers</td>
+        <td><a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a></td>
+      </tr>
+      <tr>
+        <td style="font-family:var(--sans);color:var(--ink)">Docker</td>
+        <td style="color:var(--green)">Free</td>
+        <td>Runs Qdrant vector database locally</td>
+        <td><a href="https://docs.docker.com/get-docker/" target="_blank">docker.com/get-docker</a></td>
+      </tr>
+      <tr>
+        <td class="table-section" colspan="4">Optional</td>
+      </tr>
+      <tr>
+        <td style="font-family:var(--sans);color:var(--ink)">Qdrant Cloud</td>
+        <td style="color:var(--green)">Free (1 GB)</td>
+        <td>Managed vector DB for production</td>
+        <td><a href="https://cloud.qdrant.io" target="_blank">cloud.qdrant.io</a></td>
+      </tr>
+      <tr>
+        <td style="font-family:var(--sans);color:var(--ink)">GCS Bucket</td>
+        <td>~$0.02/GB/mo</td>
+        <td>Cloud storage for documents</td>
+        <td><code>gsutil mb gs://bucket</code></td>
       </tr>
     </tbody>
   </table>
 
-  <h4>GCP Setup (5 minutes)</h4>
+  <h3>GCP Account Setup</h3>
+  <p>If you don't have a GCP project yet, follow these steps. Google gives $300 in free credits for new accounts.</p>
   <div class="code-block">
-    <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-    <pre><code class="language-bash"># 1. Install Google Cloud CLI (if not already installed)
-# macOS:
-brew install google-cloud-sdk
-# Linux:
-curl https://sdk.cloud.google.com | bash
+    <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+    <pre><code class="language-bash"># 1. Install the Google Cloud CLI
+# macOS: brew install google-cloud-sdk
+# Linux: curl https://sdk.cloud.google.com | bash
 
-# 2. Login to your Google account
+# 2. Login
 gcloud auth login
 
-# 3. Create a new project (or use an existing one)
-gcloud projects create my-docmind-project --name="DocMind"
-gcloud config set project my-docmind-project
+# 3. Create a project (or use existing)
+gcloud projects create my-docmind --name="DocMind"
+gcloud config set project my-docmind
 
-# 4. Enable billing (required for Vertex AI)
-# → Go to https://console.cloud.google.com/billing
-# → Link a billing account to your project
-# → Gemini has a generous free tier ($0 for first $300/month in credits)
+# 4. Enable billing — go to:
+#    https://console.cloud.google.com/billing
+#    Link a billing account (required for Vertex AI)
 
 # 5. Enable the Vertex AI API
 gcloud services enable aiplatform.googleapis.com
 
-# 6. Set up Application Default Credentials
+# 6. Create Application Default Credentials
 gcloud auth application-default login</code></pre>
   </div>
 
-  <h3>Setup Steps</h3>
+  <div class="divider"></div>
+
   <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
+    <div class="step" data-num="01">
       <h3>Clone &amp; Install</h3>
-      <p>Requires <strong>Python 3.12+</strong> and <strong>Docker</strong>.</p>
+      <p>Requires Python 3.12+ and the uv package manager.</p>
       <div class="code-block">
-        <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code class="language-bash"># Install uv (fast Python package manager) — skip if already installed
+        <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-bash"># Install uv (skip if already installed)
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Clone the repository
+# Clone and install
 git clone https://github.com/EhsanulHaqueSiam/docmind.git
 cd docmind
-
-# Install dependencies
 uv sync</code></pre>
       </div>
     </div>
-
-    <div class="step">
-      <div class="step-num">2</div>
+    <div class="step" data-num="02">
       <h3>Configure</h3>
-      <p>Copy the example env file and set your GCP project ID — that's the only required field.</p>
+      <p>The only required setting is your GCP project ID.</p>
       <div class="code-block">
-        <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
         <pre><code class="language-bash">cp .env.example .env</code></pre>
       </div>
       <p>Edit <code>.env</code>:</p>
       <div class="code-block">
-        <div class="code-header"><span class="lang">env</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code># Required — your GCP project ID from step above
-GCP_PROJECT_ID=my-docmind-project
+        <div class="code-header"><span class="lang-tag">env</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code># Required
+GCP_PROJECT_ID=my-docmind
 
-# Optional — protect your API with a key
-API_KEY=your-secret-key
-
-# Everything else has sensible defaults, but you can customize:
-# GEMINI_FLASH_MODEL=gemini-2.5-flash
-# TOP_K=10
-# RERANK_TOP_K=5</code></pre>
+# Optional — protect your API
+API_KEY=your-secret-key</code></pre>
       </div>
     </div>
-
-    <div class="step">
-      <div class="step-num">3</div>
+    <div class="step" data-num="03">
       <h3>Run</h3>
-      <p>Start Qdrant and the app with one command:</p>
       <div class="code-block">
-        <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code class="language-bash"># Option A: Local dev with hot reload (recommended)
-mise run dev-all
+        <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-bash"># Start Qdrant + app with hot reload
+docker compose up -d qdrant
+uv run uvicorn src.main:app --reload
 
-# Option B: Full Docker stack
-docker compose up -d
-
-# Option C: Manual
-docker compose up -d qdrant           # start Qdrant
-uv run uvicorn src.main:app --reload  # start the app</code></pre>
+# Or full Docker stack:
+docker compose up -d</code></pre>
       </div>
-      <p>Visit <a href="/docs">/docs</a> for the interactive Swagger UI, or drop files into <code>docs/</code> — they auto-ingest.</p>
     </div>
-
-    <div class="step">
-      <div class="step-num">4</div>
-      <h3>Verify It Works</h3>
+    <div class="step" data-num="04">
+      <h3>Verify</h3>
       <div class="code-block">
-        <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-        <pre><code class="language-bash"># Check health
+        <div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+        <pre><code class="language-bash"># Health check
 curl http://localhost:8000/api/v1/health
-# → {"status":"healthy","qdrant":"connected","storage_mode":"local"}
+# → {"status":"healthy","qdrant":"connected"}
 
-# Upload a test document
-curl -X POST http://localhost:8000/api/v1/documents/upload -F "file=@my-doc.pdf"
+# Upload a document
+curl -X POST http://localhost:8000/api/v1/documents/upload \
+  -F "file=@my-document.pdf"
 
 # Ask a question
 curl -X POST http://localhost:8000/api/v1/query \
@@ -427,76 +567,66 @@ curl -X POST http://localhost:8000/api/v1/query \
   </div>
 </section>
 
-<!-- =========== API REFERENCE =========== -->
+<!-- ============================== API ============================== -->
 <section id="api">
-  <h2><a href="#api"><span class="hash">#</span></a>API Reference</h2>
-  <p class="desc">All endpoints are under <code>/api/v1</code>. If <code>API_KEY</code> is set, include <code>X-API-Key</code> header.</p>
+  <div class="section-label">Reference</div>
+  <h2>API</h2>
+  <p class="desc">All endpoints live under <code>/api/v1</code>. If <code>API_KEY</code> is set, include <code>X-API-Key</code> header in every request.</p>
 
-  <h3>Query</h3>
+  <h3>Query &amp; Search</h3>
 
   <!-- POST /query -->
   <div class="endpoint open">
     <div class="endpoint-header" onclick="toggleEndpoint(this)">
       <span class="method post">POST</span>
       <span class="endpoint-path">/api/v1/query</span>
-      <span class="endpoint-desc">Ask a question, get a grounded answer</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-desc">Ask a question, get a cited answer</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Retrieves relevant document chunks, then uses Gemini to generate a grounded answer with source citations. Uses Flash by default with automatic Pro fallback for uncertain answers.</p>
-      <h4>Request Body</h4>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-        <tr><td>question</td><td>string</td><td>The question to answer (1–10,000 chars, required)</td></tr>
-        <tr><td>use_pro</td><td>boolean</td><td>Force Gemini Pro model (default: false)</td></tr>
+      <p>Retrieves relevant chunks, then uses Gemini to generate a grounded answer with <code>[filename]</code> citations. Uses Flash by default; falls back to Pro for uncertain answers.</p>
+      <h4>Request</h4>
+      <table><tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td>question</td><td>string</td><td>Your question (1–10,000 chars, required)</td></tr>
+        <tr><td>use_pro</td><td>boolean</td><td>Force Gemini Pro (default: false)</td></tr>
       </table>
       <h4>Response</h4>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-        <tr><td>answer</td><td>string</td><td>Generated answer with [filename] citations</td></tr>
-        <tr><td>sources</td><td>string[]</td><td>List of source filenames used</td></tr>
-        <tr><td>model</td><td>string | null</td><td>Model used (e.g. "gemini-2.5-flash")</td></tr>
-        <tr><td>chunks_used</td><td>integer</td><td>Number of context chunks used</td></tr>
-        <tr><td>fallback</td><td>boolean</td><td>Whether Pro fallback was triggered</td></tr>
+      <table><tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td>answer</td><td>string</td><td>Generated answer with citations</td></tr>
+        <tr><td>sources</td><td>string[]</td><td>Source filenames used</td></tr>
+        <tr><td>model</td><td>string|null</td><td>Model used</td></tr>
+        <tr><td>chunks_used</td><td>integer</td><td>Number of context chunks</td></tr>
+        <tr><td>fallback</td><td>boolean</td><td>Whether Pro fallback triggered</td></tr>
       </table>
-
       <div class="tabs">
-        <div class="tab active" onclick="switchTab(this, 'query')">cURL</div>
-        <div class="tab" onclick="switchTab(this, 'query')">Python</div>
-        <div class="tab" onclick="switchTab(this, 'query')">JavaScript</div>
+        <div class="tab active" onclick="switchTab(this,'query')">cURL</div>
+        <div class="tab" onclick="switchTab(this,'query')">Python</div>
+        <div class="tab" onclick="switchTab(this,'query')">JavaScript</div>
       </div>
-      <div class="tab-content active" data-group="query">
-        <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="tab-content active" data-group="query"><div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/query \
   -H "Content-Type: application/json" \
-  -d '{"question": "What are the key findings in the report?"}'</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="query">
-        <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+  -d '{"question": "What are the key findings?"}'</code></pre></div></div>
+      <div class="tab-content" data-group="query"><div class="code-block"><div class="code-header"><span class="lang-tag">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-python">import httpx
 
 resp = httpx.post("http://localhost:8000/api/v1/query", json={
-    "question": "What are the key findings in the report?",
+    "question": "What are the key findings?",
     "use_pro": False,
 })
 data = resp.json()
 print(data["answer"])
-print("Sources:", data["sources"])</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="query">
-        <div class="code-block"><div class="code-header"><span class="lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+print("Sources:", data["sources"])</code></pre></div></div>
+      <div class="tab-content" data-group="query"><div class="code-block"><div class="code-header"><span class="lang-tag">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-javascript">const resp = await fetch("http://localhost:8000/api/v1/query", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ question: "What are the key findings?" }),
 });
-const data = await resp.json();
-console.log(data.answer);
-console.log("Sources:", data.sources);</code></pre></div>
-      </div>
-
+const { answer, sources } = await resp.json();
+console.log(answer, sources);</code></pre></div></div>
       <h4>Example Response</h4>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-json">{
   "answer": "The report identifies three key findings: ...[report.pdf]",
   "sources": ["report.pdf"],
@@ -512,37 +642,21 @@ console.log("Sources:", data.sources);</code></pre></div>
     <div class="endpoint-header" onclick="toggleEndpoint(this)">
       <span class="method post">POST</span>
       <span class="endpoint-path">/api/v1/search</span>
-      <span class="endpoint-desc">Semantic search — raw chunks without LLM</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-desc">Semantic search &mdash; raw chunks, no LLM</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Performs semantic vector search and optional Gemini reranking. Returns raw document chunks without generating an LLM answer. Useful for search UIs, debugging, or building custom pipelines.</p>
-      <h4>Request Body</h4>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-        <tr><td>query</td><td>string</td><td>Search query (1–10,000 chars, required)</td></tr>
-        <tr><td>rerank</td><td>boolean</td><td>Enable Gemini reranking (default: true)</td></tr>
+      <p>Vector search with optional Gemini reranking. Returns raw chunks without generating an answer. Useful for search UIs, debugging, or custom pipelines.</p>
+      <h4>Request</h4>
+      <table><tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td>query</td><td>string</td><td>Search query (required)</td></tr>
+        <tr><td>rerank</td><td>boolean</td><td>Gemini reranking (default: true)</td></tr>
       </table>
-      <h4>Response</h4>
-      <p>Array of search results:</p>
-      <table>
-        <tr><th>Field</th><th>Type</th><th>Description</th></tr>
-        <tr><td>text</td><td>string</td><td>Chunk text content</td></tr>
-        <tr><td>filename</td><td>string</td><td>Source document filename</td></tr>
-        <tr><td>doc_id</td><td>string</td><td>Document UUID</td></tr>
-        <tr><td>chunk_index</td><td>integer</td><td>Position within the document</td></tr>
-        <tr><td>headings</td><td>string[]</td><td>Section headings hierarchy</td></tr>
-        <tr><td>score</td><td>float</td><td>Vector similarity score</td></tr>
-        <tr><td>rerank_score</td><td>float | null</td><td>Gemini relevance score (if reranked)</td></tr>
-      </table>
-
       <div class="tabs">
-        <div class="tab active" onclick="switchTab(this, 'search')">cURL</div>
-        <div class="tab" onclick="switchTab(this, 'search')">Python</div>
-        <div class="tab" onclick="switchTab(this, 'search')">JavaScript</div>
+        <div class="tab active" onclick="switchTab(this,'search')">cURL</div>
+        <div class="tab" onclick="switchTab(this,'search')">Python</div>
       </div>
-      <div class="tab-content active" data-group="search">
-        <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="tab-content active" data-group="search"><div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-bash"># With reranking (default)
 curl -X POST http://localhost:8000/api/v1/search \
   -H "Content-Type: application/json" \
@@ -551,31 +665,15 @@ curl -X POST http://localhost:8000/api/v1/search \
 # Without reranking (faster, cheaper)
 curl -X POST http://localhost:8000/api/v1/search \
   -H "Content-Type: application/json" \
-  -d '{"query": "machine learning algorithms", "rerank": false}'</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="search">
-        <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+  -d '{"query": "machine learning", "rerank": false}'</code></pre></div></div>
+      <div class="tab-content" data-group="search"><div class="code-block"><div class="code-header"><span class="lang-tag">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-python">import httpx
 
 resp = httpx.post("http://localhost:8000/api/v1/search", json={
     "query": "machine learning algorithms",
-    "rerank": True,
 })
 for chunk in resp.json():
-    print(f"[{chunk['filename']}] score={chunk['score']:.3f}")
-    print(f"  {chunk['text'][:100]}...")
-    print()</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="search">
-        <div class="code-block"><div class="code-header"><span class="lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-javascript">const resp = await fetch("http://localhost:8000/api/v1/search", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ query: "machine learning algorithms" }),
-});
-const chunks = await resp.json();
-chunks.forEach(c => console.log(`[${c.filename}] ${c.text.slice(0, 80)}...`));</code></pre></div>
-      </div>
+    print(f"[{chunk['filename']}] {chunk['text'][:80]}...")</code></pre></div></div>
     </div>
   </div>
 
@@ -587,65 +685,38 @@ chunks.forEach(c => console.log(`[${c.filename}] ${c.text.slice(0, 80)}...`));</
       <span class="method post">POST</span>
       <span class="endpoint-path">/api/v1/documents/upload</span>
       <span class="endpoint-desc">Upload and ingest a document</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Upload a file via multipart form data. The file is saved, parsed by Docling, chunked, embedded with Gemini, and indexed into Qdrant. Duplicate files (by content hash) are automatically skipped.</p>
-      <p><strong>Supported formats:</strong> <code>.pdf</code> <code>.docx</code> <code>.pptx</code> <code>.xlsx</code> <code>.txt</code> <code>.md</code> <code>.csv</code> <code>.html</code> <code>.png</code> <code>.jpg</code> <code>.jpeg</code> <code>.tiff</code> <code>.bmp</code></p>
-
+      <p>Multipart file upload. The file is parsed by Docling, chunked, embedded, and indexed. Duplicates (by content hash) are skipped.</p>
+      <p><strong>Supported:</strong> <code>.pdf</code> <code>.docx</code> <code>.pptx</code> <code>.xlsx</code> <code>.txt</code> <code>.md</code> <code>.csv</code> <code>.html</code> <code>.png</code> <code>.jpg</code> <code>.jpeg</code> <code>.tiff</code> <code>.bmp</code></p>
       <div class="tabs">
-        <div class="tab active" onclick="switchTab(this, 'upload')">cURL</div>
-        <div class="tab" onclick="switchTab(this, 'upload')">Python</div>
-        <div class="tab" onclick="switchTab(this, 'upload')">JavaScript</div>
+        <div class="tab active" onclick="switchTab(this,'upload')">cURL</div>
+        <div class="tab" onclick="switchTab(this,'upload')">Python</div>
+        <div class="tab" onclick="switchTab(this,'upload')">JavaScript</div>
       </div>
-      <div class="tab-content active" data-group="upload">
-        <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash"># Upload a PDF
-curl -X POST http://localhost:8000/api/v1/documents/upload \
-  -F "file=@research-paper.pdf"
-
-# Upload a Word document
-curl -X POST http://localhost:8000/api/v1/documents/upload \
-  -F "file=@report.docx"</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="upload">
-        <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="tab-content active" data-group="upload"><div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/documents/upload \
+  -F "file=@research-paper.pdf"</code></pre></div></div>
+      <div class="tab-content" data-group="upload"><div class="code-block"><div class="code-header"><span class="lang-tag">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-python">import httpx
 
-with open("research-paper.pdf", "rb") as f:
+with open("report.pdf", "rb") as f:
     resp = httpx.post(
         "http://localhost:8000/api/v1/documents/upload",
-        files={"file": ("research-paper.pdf", f, "application/pdf")},
+        files={"file": ("report.pdf", f, "application/pdf")},
     )
-
-result = resp.json()
-print(f"Status: {result['status']}, Chunks: {result['chunks']}")
-print(f"Doc ID: {result['doc_id']}")  # save this for deletion</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="upload">
-        <div class="code-block"><div class="code-header"><span class="lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-javascript">const formData = new FormData();
-formData.append("file", fileInput.files[0]);
-
+print(resp.json())
+# {"status":"ingested","filename":"report.pdf","doc_id":"...","chunks":42}</code></pre></div></div>
+      <div class="tab-content" data-group="upload"><div class="code-block"><div class="code-header"><span class="lang-tag">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-javascript">const form = new FormData();
+form.append("file", fileInput.files[0]);
 const resp = await fetch("http://localhost:8000/api/v1/documents/upload", {
-  method: "POST",
-  body: formData,
+  method: "POST", body: form,
 });
-const result = await resp.json();
-console.log(`Ingested: ${result.chunks} chunks, ID: ${result.doc_id}`);</code></pre></div>
-      </div>
-
-      <h4>Response</h4>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-json">{
-  "status": "ingested",
-  "filename": "research-paper.pdf",
-  "doc_id": "a1b2c3d4-e5f6-...",
-  "chunks": 42
-}</code></pre></div>
-      <h4>Error Responses</h4>
-      <table>
-        <tr><th>Status</th><th>Reason</th></tr>
+const { doc_id, chunks } = await resp.json();</code></pre></div></div>
+      <h4>Errors</h4>
+      <table><tr><th>Status</th><th>Reason</th></tr>
         <tr><td>400</td><td>Unsupported file type or invalid filename</td></tr>
         <tr><td>401</td><td>Missing or invalid API key</td></tr>
         <tr><td>413</td><td>File exceeds MAX_UPLOAD_SIZE_MB</td></tr>
@@ -659,47 +730,16 @@ console.log(`Ingested: ${result.chunks} chunks, ID: ${result.doc_id}`);</code></
       <span class="method get">GET</span>
       <span class="endpoint-path">/api/v1/documents</span>
       <span class="endpoint-desc">List ingested documents (paginated)</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
       <h4>Query Parameters</h4>
-      <table>
-        <tr><th>Param</th><th>Default</th><th>Description</th></tr>
-        <tr><td>offset</td><td>0</td><td>Number of documents to skip</td></tr>
-        <tr><td>limit</td><td>50</td><td>Max documents to return (1–200)</td></tr>
+      <table><tr><th>Param</th><th>Default</th><th>Description</th></tr>
+        <tr><td>offset</td><td>0</td><td>Documents to skip</td></tr>
+        <tr><td>limit</td><td>50</td><td>Max to return (1&ndash;200)</td></tr>
       </table>
-
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab(this, 'listdocs')">cURL</div>
-        <div class="tab" onclick="switchTab(this, 'listdocs')">Python</div>
-      </div>
-      <div class="tab-content active" data-group="listdocs">
-        <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash"># List first 10 documents
-curl "http://localhost:8000/api/v1/documents?limit=10"
-
-# Paginate: get page 2
-curl "http://localhost:8000/api/v1/documents?offset=10&limit=10"</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="listdocs">
-        <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-python">import httpx
-
-resp = httpx.get("http://localhost:8000/api/v1/documents", params={"limit": 10})
-for doc in resp.json():
-    print(f"{doc['filename']} — {doc['chunks']} chunks (id: {doc['doc_id'][:8]}...)")</code></pre></div>
-      </div>
-
-      <h4>Response</h4>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-json">[
-  {
-    "doc_id": "a1b2c3d4-...",
-    "filename": "research-paper.pdf",
-    "chunks": 42,
-    "timestamp": 1709567890.123
-  }
-]</code></pre></div>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">curl "http://localhost:8000/api/v1/documents?limit=10"</code></pre></div>
     </div>
   </div>
 
@@ -709,26 +749,12 @@ for doc in resp.json():
       <span class="method delete">DELETE</span>
       <span class="endpoint-path">/api/v1/documents/{doc_id}</span>
       <span class="endpoint-desc">Delete a document and its chunks</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Removes all chunks for the given document from the vector index. Returns 404 if the document doesn't exist.</p>
-      <div class="tabs">
-        <div class="tab active" onclick="switchTab(this, 'delete')">cURL</div>
-        <div class="tab" onclick="switchTab(this, 'delete')">Python</div>
-      </div>
-      <div class="tab-content active" data-group="delete">
-        <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash">curl -X DELETE http://localhost:8000/api/v1/documents/a1b2c3d4-e5f6-...</code></pre></div>
-      </div>
-      <div class="tab-content" data-group="delete">
-        <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-python">import httpx
-
-doc_id = "a1b2c3d4-e5f6-..."
-resp = httpx.delete(f"http://localhost:8000/api/v1/documents/{doc_id}")
-print(resp.json())  # {"status": "deleted", "doc_id": "..."}</code></pre></div>
-      </div>
+      <p>Removes all indexed chunks for the given document. Returns 404 if the document doesn't exist.</p>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">curl -X DELETE http://localhost:8000/api/v1/documents/YOUR_DOC_ID</code></pre></div>
     </div>
   </div>
 
@@ -738,20 +764,12 @@ print(resp.json())  # {"status": "deleted", "doc_id": "..."}</code></pre></div>
       <span class="method post">POST</span>
       <span class="endpoint-path">/api/v1/documents/ingest</span>
       <span class="endpoint-desc">Re-ingest the docs/ directory</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Scans the <code>docs/</code> directory and ingests any new or modified files. Already-ingested files (matched by content hash) are skipped.</p>
-      <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <p>Scans <code>docs/</code> and ingests new or modified files. Already-ingested files are skipped.</p>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-bash">curl -X POST http://localhost:8000/api/v1/documents/ingest</code></pre></div>
-      <h4>Response</h4>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-json">{
-  "results": [
-    {"status": "ingested", "filename": "new-doc.pdf", "doc_id": "...", "chunks": 15},
-    {"status": "skipped", "filename": "old-doc.pdf", "reason": "already ingested"}
-  ]
-}</code></pre></div>
     </div>
   </div>
 
@@ -763,13 +781,11 @@ print(resp.json())  # {"status": "deleted", "doc_id": "..."}</code></pre></div>
       <span class="method get">GET</span>
       <span class="endpoint-path">/api/v1/health</span>
       <span class="endpoint-desc">Health check</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Returns 200 if the app and Qdrant are healthy, 503 if Qdrant is unreachable.</p>
-      <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash">curl http://localhost:8000/api/v1/health</code></pre></div>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <p>Returns 200 when healthy, 503 when Qdrant is unreachable.</p>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-json">{"status": "healthy", "qdrant": "connected", "storage_mode": "local"}</code></pre></div>
     </div>
   </div>
@@ -780,13 +796,10 @@ print(resp.json())  # {"status": "deleted", "doc_id": "..."}</code></pre></div>
       <span class="method get">GET</span>
       <span class="endpoint-path">/api/v1/stats</span>
       <span class="endpoint-desc">Collection statistics</span>
-      <span class="endpoint-toggle">&#9662;</span>
+      <span class="endpoint-chevron">&#9662;</span>
     </div>
     <div class="endpoint-body">
-      <p>Returns Qdrant collection metrics: total indexed points, vectors, segments, and status.</p>
-      <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash">curl http://localhost:8000/api/v1/stats</code></pre></div>
-      <div class="code-block"><div class="code-header"><span class="lang">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+      <div class="code-block"><div class="code-header"><span class="lang-tag">json</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-json">{
   "collection": "docmind_documents",
   "points_count": 342,
@@ -798,439 +811,331 @@ print(resp.json())  # {"status": "deleted", "doc_id": "..."}</code></pre></div>
   </div>
 </section>
 
-<!-- =========== EXAMPLES =========== -->
+<!-- ============================== EXAMPLES ============================== -->
 <section id="examples">
-  <h2><a href="#examples"><span class="hash">#</span></a>Complete Examples</h2>
-  <p class="desc">End-to-end workflows showing how to use DocMind in your applications.</p>
+  <div class="section-label">Workflows</div>
+  <h2>Complete Examples</h2>
+  <p class="desc">End-to-end code showing how to integrate DocMind into your applications.</p>
 
-  <h3>Python: Upload, Query, and Cleanup</h3>
-  <div class="code-block">
-    <div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-python">"""Complete DocMind workflow: upload → query → search → delete."""
+  <h3>Python: Full Workflow</h3>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-python">"""DocMind: upload → search → query → delete."""
 import httpx
 
 BASE = "http://localhost:8000/api/v1"
-# If API_KEY is set, uncomment:
-# HEADERS = {"X-API-Key": "your-secret-key"}
-HEADERS = {}
+client = httpx.Client(base_url=BASE, timeout=120)
+# If API_KEY is set: client = httpx.Client(..., headers={"X-API-Key": "secret"})
 
-client = httpx.Client(base_url=BASE, headers=HEADERS, timeout=120)
-
-# 1. Check health
-health = client.get("/health").json()
-print(f"Status: {health['status']}, Qdrant: {health['qdrant']}")
-
-# 2. Upload a document
+# 1. Upload a document
 with open("annual-report.pdf", "rb") as f:
-    resp = client.post("/documents/upload", files={"file": f})
-    upload = resp.json()
-    print(f"Uploaded: {upload['filename']} → {upload['chunks']} chunks")
-    doc_id = upload["doc_id"]
+    upload = client.post("/documents/upload", files={"file": f}).json()
+print(f"Ingested: {upload['chunks']} chunks, ID: {upload['doc_id']}")
 
-# 3. List all documents
-docs = client.get("/documents").json()
-for doc in docs:
-    print(f"  {doc['filename']} ({doc['chunks']} chunks)")
-
-# 4. Search for relevant chunks (no LLM generation)
-results = client.post("/search", json={"query": "revenue growth 2024"}).json()
-print(f"\nFound {len(results)} relevant chunks:")
+# 2. Search for relevant chunks (no LLM cost)
+results = client.post("/search", json={"query": "revenue growth"}).json()
 for r in results:
     print(f"  [{r['filename']}] score={r['score']:.3f}: {r['text'][:80]}...")
 
-# 5. Ask a question (with LLM-generated answer)
+# 3. Ask a question (Gemini generates answer)
 answer = client.post("/query", json={
     "question": "What was the company's revenue growth in 2024?",
 }).json()
-print(f"\nAnswer ({answer['model']}, {answer['chunks_used']} chunks):")
-print(answer["answer"])
-print(f"Sources: {', '.join(answer['sources'])}")
-print(f"Fallback to Pro: {answer['fallback']}")
+print(f"\n{answer['answer']}")
+print(f"Sources: {answer['sources']}, Model: {answer['model']}")
 
-# 6. Use Gemini Pro for complex questions
-pro_answer = client.post("/query", json={
-    "question": "Compare Q1 and Q4 performance across all metrics",
+# 4. Use Pro for complex questions
+pro = client.post("/query", json={
+    "question": "Compare Q1 vs Q4 across all metrics",
     "use_pro": True,
 }).json()
-print(f"\nPro answer ({pro_answer['model']}):")
-print(pro_answer["answer"])
+print(pro["answer"])
 
-# 7. Check stats
+# 5. List all documents
+for doc in client.get("/documents").json():
+    print(f"  {doc['filename']} — {doc['chunks']} chunks")
+
+# 6. Check stats
 stats = client.get("/stats").json()
-print(f"\nCollection: {stats['points_count']} points, status={stats['status']}")
+print(f"Total points: {stats['points_count']}")
 
-# 8. Delete the document
-client.delete(f"/documents/{doc_id}")
-print(f"\nDeleted document {doc_id}")</code></pre>
-  </div>
+# 7. Delete
+client.delete(f"/documents/{upload['doc_id']}")</code></pre></div>
 
-  <h3>JavaScript: Build a Search Interface</h3>
-  <div class="code-block">
-    <div class="code-header"><span class="lang">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-javascript">/**
- * DocMind client for browser or Node.js applications.
- */
-class DocMindClient {
-  constructor(baseUrl = "http://localhost:8000/api/v1", apiKey = null) {
-    this.baseUrl = baseUrl;
+  <h3>JavaScript Client</h3>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">javascript</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-javascript">class DocMind {
+  constructor(base = "http://localhost:8000/api/v1", apiKey = null) {
+    this.base = base;
     this.headers = { "Content-Type": "application/json" };
     if (apiKey) this.headers["X-API-Key"] = apiKey;
   }
 
   async query(question, usePro = false) {
-    const resp = await fetch(`${this.baseUrl}/query`, {
-      method: "POST",
-      headers: this.headers,
+    const r = await fetch(`${this.base}/query`, {
+      method: "POST", headers: this.headers,
       body: JSON.stringify({ question, use_pro: usePro }),
     });
-    if (!resp.ok) throw new Error(`Query failed: ${resp.status}`);
-    return resp.json();
+    return r.json();
   }
 
   async search(query, rerank = true) {
-    const resp = await fetch(`${this.baseUrl}/search`, {
-      method: "POST",
-      headers: this.headers,
+    const r = await fetch(`${this.base}/search`, {
+      method: "POST", headers: this.headers,
       body: JSON.stringify({ query, rerank }),
     });
-    if (!resp.ok) throw new Error(`Search failed: ${resp.status}`);
-    return resp.json();
+    return r.json();
   }
 
   async upload(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const headers = {};
-    if (this.headers["X-API-Key"]) headers["X-API-Key"] = this.headers["X-API-Key"];
-    const resp = await fetch(`${this.baseUrl}/documents/upload`, {
-      method: "POST", headers, body: formData,
+    const form = new FormData();
+    form.append("file", file);
+    const h = this.headers["X-API-Key"]
+      ? { "X-API-Key": this.headers["X-API-Key"] } : {};
+    const r = await fetch(`${this.base}/documents/upload`, {
+      method: "POST", headers: h, body: form,
     });
-    if (!resp.ok) throw new Error(`Upload failed: ${resp.status}`);
-    return resp.json();
+    return r.json();
   }
 
-  async listDocuments(offset = 0, limit = 50) {
-    const resp = await fetch(
-      `${this.baseUrl}/documents?offset=${offset}&limit=${limit}`,
-      { headers: this.headers },
-    );
-    return resp.json();
+  async documents(offset = 0, limit = 50) {
+    return (await fetch(`${this.base}/documents?offset=${offset}&limit=${limit}`,
+      { headers: this.headers })).json();
   }
 
-  async deleteDocument(docId) {
-    const resp = await fetch(`${this.baseUrl}/documents/${docId}`, {
-      method: "DELETE", headers: this.headers,
-    });
-    if (!resp.ok) throw new Error(`Delete failed: ${resp.status}`);
-    return resp.json();
-  }
-
-  async stats() {
-    const resp = await fetch(`${this.baseUrl}/stats`, { headers: this.headers });
-    return resp.json();
-  }
-
-  async health() {
-    const resp = await fetch(`${this.baseUrl}/health`, { headers: this.headers });
-    return resp.json();
+  async delete(docId) {
+    return (await fetch(`${this.base}/documents/${docId}`,
+      { method: "DELETE", headers: this.headers })).json();
   }
 }
 
-// Usage:
-const dm = new DocMindClient("http://localhost:8000/api/v1");
-const results = await dm.search("machine learning techniques");
-const answer = await dm.query("Explain the ML techniques used in the paper");</code></pre>
-  </div>
+// Usage
+const dm = new DocMind("http://localhost:8000/api/v1", "your-api-key");
+const answer = await dm.query("Summarize the main points");
+const chunks = await dm.search("neural networks", false);</code></pre></div>
 
-  <h3>cURL: Quick Operations</h3>
-  <div class="code-block">
-    <div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+  <h3>Batch Upload (Shell)</h3>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-bash">BASE="http://localhost:8000/api/v1"
-# API_KEY="-H 'X-API-Key: your-key'"  # uncomment if auth enabled
 
 # Upload all PDFs in a directory
 for f in ~/papers/*.pdf; do
-  echo "Uploading $f..."
-  curl -s -X POST "$BASE/documents/upload" -F "file=@$f" | python3 -m json.tool
+  echo "Uploading $(basename $f)..."
+  curl -s -X POST "$BASE/documents/upload" \
+    -F "file=@$f" | python3 -m json.tool
 done
 
-# Ask a question
-curl -s -X POST "$BASE/query" \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Summarize the main contributions"}' | python3 -m json.tool
-
-# Quick search (no LLM, no reranking — fastest)
+# Quick search (no LLM, no reranking — cheapest)
 curl -s -X POST "$BASE/search" \
   -H "Content-Type: application/json" \
-  -d '{"query": "neural networks", "rerank": false}' | python3 -m json.tool
-
-# List all docs
-curl -s "$BASE/documents" | python3 -m json.tool
-
-# Delete a specific document by ID
-curl -s -X DELETE "$BASE/documents/YOUR_DOC_ID"</code></pre>
-  </div>
+  -d '{"query": "neural networks", "rerank": false}'</code></pre></div>
 </section>
 
-<!-- =========== AUTH =========== -->
+<!-- ============================== AUTH ============================== -->
 <section id="auth">
-  <h2><a href="#auth"><span class="hash">#</span></a>Authentication</h2>
-  <p class="desc">Optional API key authentication to protect your endpoints.</p>
+  <div class="section-label">Security</div>
+  <h2>Authentication</h2>
+  <p class="desc">Optional API key protection. Disabled by default.</p>
 
-  <p>By default, DocMind runs without authentication. To enable it, set the <code>API_KEY</code> environment variable:</p>
-  <div class="code-block"><div class="code-header"><span class="lang">env</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code># In .env
-API_KEY=your-secret-api-key-here</code></pre></div>
-
-  <p>Then include the key in every request:</p>
-  <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash"># With authentication
-curl -H "X-API-Key: your-secret-api-key-here" \
+  <p>Set <code>API_KEY</code> in your <code>.env</code> to require an <code>X-API-Key</code> header on every request:</p>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">env</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code>API_KEY=your-secret-api-key</code></pre></div>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash"># Authenticated request
+curl -H "X-API-Key: your-secret-api-key" \
   http://localhost:8000/api/v1/health
 
-# Without key → 401 Unauthorized
-curl http://localhost:8000/api/v1/health
-# {"detail": "Invalid or missing API key"}</code></pre></div>
-
-  <div class="code-block"><div class="code-header"><span class="lang">python</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-python"># Python with authentication
-import httpx
-
-client = httpx.Client(
-    base_url="http://localhost:8000/api/v1",
-    headers={"X-API-Key": "your-secret-api-key-here"},
-)</code></pre></div>
+# Without key → 401 Unauthorized</code></pre></div>
 </section>
 
-<!-- =========== CONFIG =========== -->
+<!-- ============================== CONFIG ============================== -->
 <section id="config">
-  <h2><a href="#config"><span class="hash">#</span></a>Configuration</h2>
-  <p class="desc">All settings via environment variables. Copy <code>.env.example</code> to <code>.env</code>.</p>
+  <div class="section-label">Reference</div>
+  <h2>Configuration</h2>
+  <p class="desc">All settings via environment variables in <code>.env</code>.</p>
 
   <table>
-    <thead>
-      <tr><th>Variable</th><th>Default</th><th>Description</th></tr>
-    </thead>
+    <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
     <tbody>
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">GCP</td></tr>
-      <tr><td>GCP_PROJECT_ID</td><td>—</td><td>Google Cloud project ID (required)</td></tr>
+      <tr><td class="table-section" colspan="3">Google Cloud</td></tr>
+      <tr><td>GCP_PROJECT_ID</td><td>&mdash;</td><td>Project ID (required)</td></tr>
       <tr><td>GCP_LOCATION</td><td>us-central1</td><td>Vertex AI region</td></tr>
-
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Models</td></tr>
-      <tr><td>GEMINI_FLASH_MODEL</td><td>gemini-2.5-flash</td><td>Fast model for queries</td></tr>
-      <tr><td>GEMINI_PRO_MODEL</td><td>gemini-2.5-pro</td><td>Fallback model for complex queries</td></tr>
-      <tr><td>EMBEDDING_MODEL</td><td>gemini-embedding-001</td><td>Gemini embedding model</td></tr>
-      <tr><td>EMBEDDING_DIMENSION</td><td>768</td><td>Embedding output dimensions</td></tr>
-
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Qdrant</td></tr>
-      <tr><td>QDRANT_URL</td><td>http://localhost:6333</td><td>Qdrant connection URL</td></tr>
-      <tr><td>QDRANT_API_KEY</td><td>—</td><td>Qdrant API key (for Qdrant Cloud)</td></tr>
+      <tr><td class="table-section" colspan="3">Models</td></tr>
+      <tr><td>GEMINI_FLASH_MODEL</td><td>gemini-2.5-flash</td><td>Fast model</td></tr>
+      <tr><td>GEMINI_PRO_MODEL</td><td>gemini-2.5-pro</td><td>Fallback model</td></tr>
+      <tr><td>EMBEDDING_MODEL</td><td>gemini-embedding-001</td><td>Embedding model</td></tr>
+      <tr><td>EMBEDDING_DIMENSION</td><td>768</td><td>Vector dimensions</td></tr>
+      <tr><td class="table-section" colspan="3">Qdrant</td></tr>
+      <tr><td>QDRANT_URL</td><td>http://localhost:6333</td><td>Connection URL</td></tr>
+      <tr><td>QDRANT_API_KEY</td><td>&mdash;</td><td>API key (Qdrant Cloud)</td></tr>
       <tr><td>QDRANT_COLLECTION</td><td>docmind_documents</td><td>Collection name</td></tr>
-
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Storage</td></tr>
+      <tr><td class="table-section" colspan="3">Storage</td></tr>
       <tr><td>STORAGE_MODE</td><td>local</td><td><code>local</code> or <code>gcs</code></td></tr>
-      <tr><td>DOCS_DIRECTORY</td><td>docs</td><td>Local document directory</td></tr>
-      <tr><td>GCS_BUCKET</td><td>—</td><td>GCS bucket (when STORAGE_MODE=gcs)</td></tr>
-
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">App</td></tr>
-      <tr><td>API_KEY</td><td>—</td><td>API key for auth (empty = open access)</td></tr>
-      <tr><td>CORS_ORIGINS</td><td>*</td><td>Comma-separated allowed origins</td></tr>
-      <tr><td>LOG_LEVEL</td><td>info</td><td>Logging level</td></tr>
-      <tr><td>MAX_UPLOAD_SIZE_MB</td><td>100</td><td>Maximum upload file size in MB</td></tr>
-
-      <tr><td colspan="3" style="font-weight:600; color:var(--text); background:rgba(99,102,241,0.06); font-family:var(--font); font-size:13px; text-transform:uppercase; letter-spacing:0.5px;">Retrieval</td></tr>
-      <tr><td>TOP_K</td><td>10</td><td>Chunks retrieved from vector search</td></tr>
-      <tr><td>RERANK_TOP_K</td><td>5</td><td>Chunks kept after Gemini reranking</td></tr>
-      <tr><td>RERANK_CONTEXT_CHARS</td><td>500</td><td>Characters per chunk sent to reranker</td></tr>
+      <tr><td>DOCS_DIRECTORY</td><td>docs</td><td>Local docs path</td></tr>
+      <tr><td>GCS_BUCKET</td><td>&mdash;</td><td>GCS bucket name</td></tr>
+      <tr><td class="table-section" colspan="3">Application</td></tr>
+      <tr><td>API_KEY</td><td>&mdash;</td><td>Auth key (empty = open)</td></tr>
+      <tr><td>CORS_ORIGINS</td><td>*</td><td>Allowed origins</td></tr>
+      <tr><td>MAX_UPLOAD_SIZE_MB</td><td>100</td><td>Upload limit</td></tr>
+      <tr><td>LOG_LEVEL</td><td>info</td><td>Log verbosity</td></tr>
+      <tr><td class="table-section" colspan="3">Retrieval</td></tr>
+      <tr><td>TOP_K</td><td>10</td><td>Chunks retrieved</td></tr>
+      <tr><td>RERANK_TOP_K</td><td>5</td><td>Chunks after reranking</td></tr>
+      <tr><td>RERANK_CONTEXT_CHARS</td><td>500</td><td>Chars sent to reranker</td></tr>
     </tbody>
   </table>
 </section>
 
-<!-- =========== ARCHITECTURE =========== -->
+<!-- ============================== ARCHITECTURE ============================== -->
 <section id="architecture">
-  <h2><a href="#architecture"><span class="hash">#</span></a>Architecture</h2>
+  <div class="section-label">Internals</div>
+  <h2>Architecture</h2>
   <p class="desc">How DocMind processes documents and answers questions.</p>
 
   <h3>Query Pipeline</h3>
-  <div class="arch-diagram"><span class="blue">POST /api/v1/query</span>
+  <div class="arch"><span class="b">POST /api/v1/query</span>
   <span class="dim">│</span>
-  <span class="dim">├─</span> <span class="highlight">Embed query</span> <span class="dim">(gemini-embedding-001, task=RETRIEVAL_QUERY)</span>
-  <span class="dim">├─</span> <span class="highlight">Vector search</span> <span class="dim">(Qdrant, top_k=10 candidates)</span>
-  <span class="dim">├─</span> <span class="highlight">Rerank</span> <span class="dim">(Gemini Flash, top_k=5 passages)</span>
-  <span class="dim">├─</span> <span class="highlight">Generate answer</span> <span class="dim">(Gemini Flash with context)</span>
-  <span class="dim">├─</span> <span class="amber">Fallback check</span> <span class="dim">(if answer uncertain → retry with Gemini Pro)</span>
-  <span class="dim">└─</span> <span class="green">Return answer + sources + metadata</span></div>
+  <span class="dim">├─</span> <span class="hi">Embed query</span>   <span class="dim">gemini-embedding-001, task=RETRIEVAL_QUERY</span>
+  <span class="dim">├─</span> <span class="hi">Vector search</span> <span class="dim">Qdrant, top_k=10 candidates</span>
+  <span class="dim">├─</span> <span class="hi">Rerank</span>        <span class="dim">Gemini Flash scores relevance → top 5</span>
+  <span class="dim">├─</span> <span class="hi">Generate</span>      <span class="dim">Gemini Flash builds answer from context</span>
+  <span class="dim">├─</span> <span class="a">Fallback?</span>     <span class="dim">If uncertain → retry with Gemini Pro</span>
+  <span class="dim">└─</span> <span class="g">Response</span>      <span class="dim">answer + sources + metadata</span></div>
 
   <h3>Ingestion Pipeline</h3>
-  <div class="arch-diagram"><span class="blue">POST /api/v1/documents/upload</span>  <span class="dim">or</span>  <span class="blue">File watcher (docs/)</span>
+  <div class="arch"><span class="b">Upload / File watcher</span>
   <span class="dim">│</span>
-  <span class="dim">├─</span> <span class="highlight">Validate</span> <span class="dim">(extension, size, filename sanitization)</span>
-  <span class="dim">├─</span> <span class="highlight">Deduplicate</span> <span class="dim">(SHA-256 content hash → skip if exists)</span>
-  <span class="dim">├─</span> <span class="highlight">Parse</span> <span class="dim">(Docling → structured document)</span>
-  <span class="dim">├─</span> <span class="highlight">Chunk</span> <span class="dim">(HierarchicalChunker → semantic chunks)</span>
-  <span class="dim">├─</span> <span class="highlight">Embed</span> <span class="dim">(gemini-embedding-001, task=RETRIEVAL_DOCUMENT)</span>
-  <span class="dim">└─</span> <span class="green">Index</span> <span class="dim">(Qdrant upsert with metadata)</span></div>
+  <span class="dim">├─</span> <span class="hi">Validate</span>      <span class="dim">extension, size, filename sanitization</span>
+  <span class="dim">├─</span> <span class="hi">Deduplicate</span>   <span class="dim">SHA-256 content hash → skip if exists</span>
+  <span class="dim">├─</span> <span class="hi">Parse</span>         <span class="dim">Docling → structured document model</span>
+  <span class="dim">├─</span> <span class="hi">Chunk</span>         <span class="dim">HierarchicalChunker → semantic segments</span>
+  <span class="dim">├─</span> <span class="hi">Embed</span>         <span class="dim">gemini-embedding-001, task=RETRIEVAL_DOCUMENT</span>
+  <span class="dim">└─</span> <span class="g">Index</span>         <span class="dim">Qdrant upsert with metadata + headings</span></div>
 
-  <h3>Key Design Decisions</h3>
+  <h3>Design Decisions</h3>
   <table>
-    <tr><th>Decision</th><th>Rationale</th></tr>
-    <tr><td>Asymmetric embeddings</td><td>Different task types for documents vs queries improves retrieval accuracy</td></tr>
-    <tr><td>Flash → Pro fallback</td><td>Cheap fast model first; expensive model only for uncertain answers</td></tr>
-    <tr><td>Content-hash dedup</td><td>SHA-256 prevents re-ingesting identical files, saving API costs</td></tr>
-    <tr><td>Gemini reranking</td><td>LLM reranks vector results for better relevance ordering</td></tr>
-    <tr><td>Exponential backoff</td><td>All Gemini and Qdrant calls retry on transient failures</td></tr>
-    <tr><td>File watcher</td><td>Drop files in docs/ — auto-ingested with debounced processing</td></tr>
+    <tr><th>Decision</th><th style="color:var(--charcoal)">Why</th></tr>
+    <tr><td>Asymmetric embeddings</td><td>Different task types for docs vs queries improves retrieval accuracy</td></tr>
+    <tr><td>Flash → Pro fallback</td><td>Cheap model first; expensive only when Flash is uncertain</td></tr>
+    <tr><td>Content-hash dedup</td><td>SHA-256 prevents re-ingesting identical files</td></tr>
+    <tr><td>Gemini reranking</td><td>LLM reranks vector results for better relevance</td></tr>
+    <tr><td>Exponential backoff</td><td>All API calls retry on transient failures</td></tr>
+    <tr><td>File watcher</td><td>Drop files in docs/ → auto-ingested with debounce</td></tr>
   </table>
 </section>
 
-<!-- =========== DEPLOY =========== -->
+<!-- ============================== DEPLOY ============================== -->
 <section id="deploy">
-  <h2><a href="#deploy"><span class="hash">#</span></a>Deployment</h2>
-  <p class="desc">Three deployment options depending on your needs.</p>
+  <div class="section-label">Production</div>
+  <h2>Deployment</h2>
+  <p class="desc">Three options depending on your needs.</p>
 
-  <table>
-    <thead><tr><th>Option</th><th>Best For</th><th>Qdrant</th><th>Cost</th></tr></thead>
-    <tbody>
-      <tr><td style="font-family:var(--font);color:var(--text)">Local (Docker Compose)</td><td>Development &amp; testing</td><td>Docker container</td><td style="color:var(--green)">Free</td></tr>
-      <tr><td style="font-family:var(--font);color:var(--text)">VPS / Dedicated Server</td><td>Self-hosted production</td><td>Docker on same server</td><td>$5–20/mo VPS</td></tr>
-      <tr><td style="font-family:var(--font);color:var(--text)">Google Cloud Run</td><td>Managed, auto-scaling</td><td>Qdrant Cloud</td><td>Pay per request</td></tr>
-    </tbody>
-  </table>
+  <div class="deploy-grid">
+    <div class="deploy-card">
+      <h4>Local</h4>
+      <div class="cost">Free &mdash; Docker only</div>
+      <p>Development and testing. Qdrant runs as a Docker container alongside the app.</p>
+    </div>
+    <div class="deploy-card">
+      <h4>VPS / Server</h4>
+      <div class="cost">$5&ndash;20/mo</div>
+      <p>Self-hosted production. Any Linux server with Docker. Use a service account for GCP auth.</p>
+    </div>
+    <div class="deploy-card">
+      <h4>Cloud Run</h4>
+      <div class="cost">Pay per request</div>
+      <p>Fully managed, scales to zero. Requires Qdrant Cloud and GCS bucket.</p>
+    </div>
+  </div>
 
-  <h3>Option 1: Local Development</h3>
-  <p>Everything runs on your machine via Docker. No external services needed except GCP credentials.</p>
-  <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash"># Start everything (Qdrant + DocMind)
-docker compose up -d
+  <h3>Local (Docker Compose)</h3>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">docker compose up -d        # start everything
+docker compose logs -f docmind  # view logs
+docker compose down          # stop</code></pre></div>
 
-# View logs
-docker compose logs -f docmind
-
-# Stop
-docker compose down
-
-# Or: run app locally with hot reload (for development)
-docker compose up -d qdrant
-uv run uvicorn src.main:app --reload</code></pre></div>
-
-  <h3>Option 2: VPS / Dedicated Server</h3>
-  <p>Deploy on any Linux server (DigitalOcean, Hetzner, AWS EC2, etc.). Requires Docker and at least 2 GB RAM.</p>
-  <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+  <h3>VPS / Dedicated Server</h3>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
 <pre><code class="language-bash"># 1. SSH into your server
 ssh user@your-server-ip
 
-# 2. Install Docker (if not installed)
+# 2. Install Docker
 curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-# Log out and back in for group changes
+sudo usermod -aG docker $USER && newgrp docker
 
-# 3. Clone the repo
-git clone https://github.com/EhsanulHaqueSiam/docmind.git
-cd docmind
-
-# 4. Configure
+# 3. Clone and configure
+git clone https://github.com/EhsanulHaqueSiam/docmind.git && cd docmind
 cp .env.example .env
-nano .env
-# Set: GCP_PROJECT_ID, API_KEY (important for public servers!)
+nano .env  # set GCP_PROJECT_ID and API_KEY
 
-# 5. Authenticate with GCP on the server
-# Option A: Copy your local credentials
-scp ~/.config/gcloud/application_default_credentials.json \
-    user@your-server-ip:~/.config/gcloud/
+# 4. Set up GCP credentials (use a service account for production)
+# Create at: https://console.cloud.google.com/iam-admin/serviceaccounts
+# Grant role: "Vertex AI User"
+# Download JSON key → copy to server
 
-# Option B: Use a service account (recommended for production)
-# → Create a service account in GCP Console with "Vertex AI User" role
-# → Download the JSON key file
-# → Set GOOGLE_APPLICATION_CREDENTIALS in .env:
-#   GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+# 5. Add credentials to docker-compose.yml:
+#   docmind:
+#     volumes:
+#       - ./sa-key.json:/app/sa-key.json:ro
+#     environment:
+#       - GOOGLE_APPLICATION_CREDENTIALS=/app/sa-key.json
 
-# 6. Start with Docker Compose
+# 6. Start
 docker compose up -d
 
-# 7. Set up reverse proxy (optional, for HTTPS)
-# Use nginx or Caddy to proxy port 8000:
-# sudo apt install caddy
-# echo "yourdomain.com { reverse_proxy localhost:8000 }" | sudo tee /etc/caddy/Caddyfile
-# sudo systemctl restart caddy</code></pre></div>
+# 7. (Optional) HTTPS with Caddy reverse proxy
+sudo apt install caddy
+echo "yourdomain.com { reverse_proxy localhost:8000 }" \
+  | sudo tee /etc/caddy/Caddyfile
+sudo systemctl restart caddy</code></pre></div>
 
-  <h4>Using a GCP Service Account on VPS</h4>
-  <p>For production VPS deployments, create a service account instead of using personal credentials:</p>
-  <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash"># On your local machine:
-export PROJECT_ID=my-docmind-project
+  <h4>Create a GCP Service Account</h4>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">export PROJECT_ID=my-docmind
 
 # Create service account
 gcloud iam service-accounts create docmind-sa \
-  --display-name="DocMind Service Account"
+  --display-name="DocMind"
 
-# Grant Vertex AI permissions
+# Grant Vertex AI access
 gcloud projects add-iam-policy-binding $PROJECT_ID \
   --member="serviceAccount:docmind-sa@$PROJECT_ID.iam.gserviceaccount.com" \
   --role="roles/aiplatform.user"
 
-# Download key file
-gcloud iam service-accounts keys create docmind-sa-key.json \
+# Download key
+gcloud iam service-accounts keys create sa-key.json \
   --iam-account="docmind-sa@$PROJECT_ID.iam.gserviceaccount.com"
 
-# Copy to your VPS
-scp docmind-sa-key.json user@your-server-ip:~/docmind/</code></pre></div>
-  <p>Then in your <code>docker-compose.yml</code>, add the credentials volume:</p>
-  <div class="code-block"><div class="code-header"><span class="lang">yaml</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code>  docmind:
-    build: .
-    volumes:
-      - ./docs:/app/docs
-      - ./docmind-sa-key.json:/app/service-account.json:ro
-    environment:
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json</code></pre></div>
+# Copy to VPS
+scp sa-key.json user@your-server:~/docmind/</code></pre></div>
 
-  <h3>Option 3: Google Cloud Run</h3>
-  <p>Fully managed, scales to zero when idle. Requires <a href="https://cloud.qdrant.io" target="_blank">Qdrant Cloud</a> ($0 free tier with 1 GB) and GCS bucket for document storage.</p>
+  <h3>Google Cloud Run</h3>
+  <p>Serverless deployment. Requires Qdrant Cloud (free tier: 1 GB) and a GCS bucket.</p>
+  <div class="code-block"><div class="code-header"><span class="lang-tag">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
+<pre><code class="language-bash">export PROJECT_ID=my-docmind
 
-  <h4>Prerequisites</h4>
-  <table>
-    <thead><tr><th>Service</th><th>Cost</th><th>Setup</th></tr></thead>
-    <tbody>
-      <tr><td style="font-family:var(--font);color:var(--text)">Qdrant Cloud</td><td style="color:var(--green)">Free tier (1 GB)</td><td><a href="https://cloud.qdrant.io" target="_blank">cloud.qdrant.io</a> → Create cluster → Copy URL &amp; API key</td></tr>
-      <tr><td style="font-family:var(--font);color:var(--text)">GCS Bucket</td><td style="color:var(--green)">~$0.02/GB/mo</td><td><code>gsutil mb gs://my-docmind-docs</code></td></tr>
-      <tr><td style="font-family:var(--font);color:var(--text)">Cloud Run</td><td style="color:var(--green)">Pay per request</td><td>First 2M requests/mo free</td></tr>
-    </tbody>
-  </table>
+# 1. Create GCS bucket for documents
+gsutil mb -l us-central1 gs://$PROJECT_ID-docs
 
-  <div class="code-block"><div class="code-header"><span class="lang">bash</span><button class="copy-btn" onclick="copyCode(this)">Copy</button></div>
-<pre><code class="language-bash">export PROJECT_ID=my-docmind-project
+# 2. Store secrets
+echo -n "qdrant-api-key" | gcloud secrets create QDRANT_API_KEY --data-file=-
+echo -n "your-api-key" | gcloud secrets create DOCMIND_API_KEY --data-file=-
 
-# 1. Create a GCS bucket for documents
-gsutil mb -l us-central1 gs://$PROJECT_ID-docmind-docs
-
-# 2. Store secrets in Secret Manager
-echo -n "your-qdrant-api-key" | \
-  gcloud secrets create QDRANT_API_KEY --data-file=-
-echo -n "your-api-key-for-auth" | \
-  gcloud secrets create DOCMIND_API_KEY --data-file=-
-
-# 3. Build and push the Docker image
+# 3. Build and push image
 gcloud builds submit --tag gcr.io/$PROJECT_ID/docmind-api:latest
 
-# 4. Edit deploy/cloudrun.yaml:
-#    - Set your Qdrant Cloud URL
-#    - Set your GCS bucket name
+# 4. Deploy
 sed -i "s/PROJECT_ID/$PROJECT_ID/g" deploy/cloudrun.yaml
-
-# 5. Deploy to Cloud Run
 gcloud run services replace deploy/cloudrun.yaml --region us-central1
 
-# 6. Allow public access (or keep authenticated)
+# 5. Allow public access
 gcloud run services add-iam-policy-binding docmind-api \
-  --region=us-central1 \
-  --member="allUsers" \
-  --role="roles/run.invoker"</code></pre></div>
+  --region=us-central1 --member="allUsers" --role="roles/run.invoker"</code></pre></div>
 </section>
 
 </div>
 
 <footer>
-  <p>DocMind &mdash; Document Intelligence API &mdash; <a href="https://github.com/EhsanulHaqueSiam/docmind">GitHub</a> &middot; <a href="/docs">Swagger UI</a> &middot; <a href="/redoc">ReDoc</a></p>
+  <p>DocMind &mdash; <a href="https://github.com/EhsanulHaqueSiam/docmind">GitHub</a> &middot; <a href="/docs">Swagger UI</a> &middot; <a href="/redoc">ReDoc</a></p>
 </footer>
 
 <script>
@@ -1244,9 +1149,9 @@ function switchTab(tab, group) {
   const tabs = tab.parentElement.querySelectorAll('.tab');
   tabs.forEach(t => t.classList.remove('active'));
   tab.classList.add('active');
-
   const idx = Array.from(tabs).indexOf(tab);
-  const contents = tab.closest('.endpoint-body, section').querySelectorAll(`.tab-content[data-group="${group}"]`);
+  const body = tab.closest('.endpoint-body, section');
+  const contents = body.querySelectorAll(`.tab-content[data-group="${group}"]`);
   contents.forEach((c, i) => c.classList.toggle('active', i === idx));
 }
 
@@ -1258,6 +1163,20 @@ function copyCode(btn) {
     setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
   });
 }
+
+// Animate sections on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.animationPlayState = 'running';
+      observer.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('section').forEach(s => {
+  s.style.animationPlayState = 'paused';
+  observer.observe(s);
+});
 </script>
 </body>
 </html>
